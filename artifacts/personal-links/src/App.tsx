@@ -67,15 +67,6 @@ function Home() {
               and send into the void.
             </p>
           </div>
-
-          <aside className="signal-card" aria-label="RedL1zar note">
-            <div className="signal-kicker mono-label">transmission / 04</div>
-            <blockquote>“Keep the weird tabs open.”</blockquote>
-            <footer className="mono-label">
-              <span>REDL1ZAR</span>
-              <span className="signal-index">[ 2025 ]</span>
-            </footer>
-          </aside>
         </section>
 
         <section className="links-section" aria-labelledby="links-title">
