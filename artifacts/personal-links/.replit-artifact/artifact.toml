@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "RedL1zar — Personal Links"
+description = "Адаптивная личная веб-страница-визитка с профилем RedL1zar и быстрыми ссылками на Steam, Pinterest, Spotify и Telegram."
+version = "1.0.0"
+id = "artifacts/personal-links"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19436
+
+[services.development]
+run = "pnpm --filter @workspace/personal-links run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/personal-links", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/personal-links/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19436"
+BASE_PATH = "/"
