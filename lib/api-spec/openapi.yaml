@@ -12,6 +12,10 @@ tags:
     description: Health operations
   - name: spotify
     description: Public Spotify now-playing data
+  - name: yandex
+    description: Yandex Music track lookup
+  - name: messages
+    description: Anonymous messages
 paths:
   /healthz:
     get:
@@ -39,6 +43,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SpotifyCurrentlyPlaying"
+  /yandex/track:
+    get:
+      operationId: findYandexTrack
+      tags: [yandex]
+      summary: Find the current track in Yandex Music
+      parameters:
+        - name: title
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: artist
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: album
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Canonical Yandex Music track URL, or the Yandex 404 URL when no match exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/YandexTrackLink"
+  /send:
+    post:
+      operationId: sendAnonymousMessage
+      tags: [messages]
+      summary: Send an anonymous message to the page owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        "200":
+          description: Message delivered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendMessageResponse"
+        "400":
+          description: Invalid message
+        "429":
+          description: Rate limit exceeded
+        "503":
+          description: Telegram is not configured
 components:
   schemas:
     HealthStatus:
@@ -91,5 +147,36 @@ components:
       required:
         - status
         - track
+        - message
+    YandexTrackLink:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+      required:
+        - url
+    SendMessageRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+        - message
+    SendMessageResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required:
+        - ok
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
         - message
 

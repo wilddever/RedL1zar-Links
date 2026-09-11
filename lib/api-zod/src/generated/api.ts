@@ -34,3 +34,33 @@ export const GetCurrentSpotifyTrackResponse = zod.object({
 })
 
 
+/**
+ * @summary Find the current track in Yandex Music
+ */
+export const FindYandexTrackQueryParams = zod.object({
+  "title": zod.coerce.string(),
+  "artist": zod.coerce.string(),
+  "album": zod.coerce.string().optional()
+})
+
+export const FindYandexTrackResponse = zod.object({
+  "url": zod.string().url()
+})
+
+
+/**
+ * @summary Send an anonymous message to the page owner
+ */
+export const sendAnonymousMessageBodyMessageMax = 2000;
+
+
+
+export const SendAnonymousMessageBody = zod.object({
+  "message": zod.string().min(1).max(sendAnonymousMessageBodyMessageMax)
+})
+
+export const SendAnonymousMessageResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+

@@ -35,3 +35,29 @@ export interface SpotifyCurrentlyPlaying {
   message: string;
 }
 
+export interface YandexTrackLink {
+  url: string;
+}
+
+export interface SendMessageRequest {
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  message: string;
+}
+
+export interface SendMessageResponse {
+  ok: boolean;
+}
+
+export interface ErrorMessage {
+  message: string;
+}
+
+export type FindYandexTrackParams = {
+title: string;
+artist: string;
+album?: string;
+};
+

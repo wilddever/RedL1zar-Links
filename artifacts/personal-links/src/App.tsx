@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { SiPinterest, SiSpotify, SiSteam, SiTelegram } from 'react-icons/si';
 import {
@@ -64,6 +64,8 @@ const playlists = [
       'https://music.yandex.ru/playlists/685380f9-5d00-e4f0-b4ac-a2a4878c87f9?utm_medium=copy_link&ref_id=519b1691-d903-4e13-90d3-e64d47dee138',
   },
 ];
+
+const YANDEX_404_URL = 'https://music.yandex.ru/404';
 
 const spotifyImageHosts = new Set([
   'i.scdn.co',
@@ -164,10 +166,12 @@ function ChaoticName() {
   );
 }
 
-type View = 'home' | 'playlists';
+type View = 'home' | 'playlists' | 'send';
 
 function getViewFromLocation(): View {
-  return window.location.hash === '#playlists' ? 'playlists' : 'home';
+  if (window.location.hash === '#playlists') return 'playlists';
+  if (window.location.hash === '#send') return 'send';
+  return 'home';
 }
 
 function Home() {
@@ -188,7 +192,8 @@ function Home() {
   }, []);
 
   const navigateTo = (view: View) => {
-    const nextHash = view === 'playlists' ? '#playlists' : '#home';
+    const nextHash =
+      view === 'playlists' ? '#playlists' : view === 'send' ? '#send' : '#home';
     if (window.location.hash !== nextHash) {
       window.history.pushState({}, '', nextHash);
     }
@@ -238,6 +243,15 @@ function Home() {
             type="button"
           >
             playlists
+          </button>
+          <button
+            aria-current={activeView === 'send' ? 'page' : undefined}
+            className={`section-nav__tab ${activeView === 'send' ? 'section-nav__tab--active' : ''}`}
+            data-testid="button-section-send"
+            onClick={() => navigateTo('send')}
+            type="button"
+          >
+            send
           </button>
         </nav>
 
@@ -289,8 +303,10 @@ function Home() {
               </div>
             </section>
           </>
-        ) : (
+        ) : activeView === 'playlists' ? (
           <PlaylistsView />
+        ) : (
+          <SendView />
         )}
 
         <footer className="footer-bar">
@@ -377,8 +393,101 @@ function PlaylistsView() {
   );
 }
 
+function SendView() {
+  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [statusMessage, setStatusMessage] = useState('');
+
+  const submitMessage = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage || status === 'sending') return;
+
+    setStatus('sending');
+    setStatusMessage('');
+    try {
+      const response = await fetch('/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: trimmedMessage }),
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { ok?: boolean; message?: string }
+        | null;
+
+      if (!response.ok || !result?.ok) {
+        throw new Error(result?.message ?? 'Не удалось отправить сообщение.');
+      }
+
+      setMessage('');
+      setStatus('sent');
+      setStatusMessage('Сообщение отправлено.');
+    } catch (error) {
+      setStatus('error');
+      setStatusMessage(
+        error instanceof Error ? error.message : 'Не удалось отправить сообщение.',
+      );
+    }
+  };
+
+  return (
+    <section className="send-section" aria-labelledby="send-title">
+      <div className="send-intro">
+        <div className="eyebrow mono-label">open channel</div>
+        <h1 id="send-title">send</h1>
+        <p>оставь сообщение без имени. оно придёт мне в Telegram.</p>
+      </div>
+
+      <form className="send-form" onSubmit={submitMessage}>
+        <label className="send-field">
+          <span className="mono-label">your message</span>
+          <textarea
+            aria-describedby="send-note"
+            data-testid="input-anonymous-message"
+            maxLength={2000}
+            onChange={(event) => {
+              setMessage(event.target.value);
+              if (status !== 'idle') {
+                setStatus('idle');
+                setStatusMessage('');
+              }
+            }}
+            placeholder="write something into the signal..."
+            required
+            value={message}
+          />
+        </label>
+        <div className="send-form__footer">
+          <span className="send-counter mono-label">{message.length} / 2000</span>
+          <button
+            className="send-submit"
+            data-testid="button-send-message"
+            disabled={status === 'sending'}
+            type="submit"
+          >
+            {status === 'sending' ? 'sending…' : 'send anonymously ↗'}
+          </button>
+        </div>
+        <p className="send-note mono-label" id="send-note">
+          no name, email, or account required
+        </p>
+        {statusMessage ? (
+          <p
+            aria-live="polite"
+            className={`send-status send-status--${status}`}
+            data-testid="status-send-message"
+          >
+            {statusMessage}
+          </p>
+        ) : null}
+      </form>
+    </section>
+  );
+}
+
 function NowPlaying() {
   const [state, setState] = useState<SpotifyCurrentlyPlaying | null>(null);
+  const [yandexHref, setYandexHref] = useState(YANDEX_404_URL);
 
   useEffect(() => {
     let mounted = true;
@@ -422,6 +531,39 @@ function NowPlaying() {
   }, []);
 
   const track = state?.track;
+  useEffect(() => {
+    let active = true;
+    if (!track) {
+      setYandexHref(YANDEX_404_URL);
+      return () => {
+        active = false;
+      };
+    }
+
+    const params = new URLSearchParams({
+      title: track.title,
+      artist: track.artist,
+      album: track.album,
+    });
+    setYandexHref(YANDEX_404_URL);
+
+    fetch(`/api/yandex/track?${params.toString()}`, { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as { url?: string };
+      })
+      .then((result) => {
+        if (active && result?.url) setYandexHref(result.url);
+      })
+      .catch(() => {
+        if (active) setYandexHref(YANDEX_404_URL);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [track?.album, track?.artist, track?.title]);
+
   const coverUrl = track?.imageUrl ? getSpotifyCoverUrl(track.imageUrl) : null;
   const statusLabel =
     state?.status === 'playing'
@@ -487,6 +629,21 @@ function NowPlaying() {
           <span>{state?.message ?? 'Проверяем Spotify…'}</span>
         </div>
       )}
+      {track ? (
+        <div className="now-playing-actions">
+          <a
+            className="now-playing-yandex-link"
+            data-testid="link-current-track-yandex"
+            href={yandexHref}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <span className="yandex-mark" aria-hidden="true">Я</span>
+            Open in Яндекс Музыке
+            <ExternalLink aria-hidden="true" />
+          </a>
+        </div>
+      ) : null}
     </section>
   );
 }

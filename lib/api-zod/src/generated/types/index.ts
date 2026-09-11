@@ -6,7 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './errorMessage';
+export * from './findYandexTrackParams';
 export * from './healthStatus';
+export * from './sendMessageRequest';
+export * from './sendMessageResponse';
 export * from './spotifyCurrentlyPlaying';
 export * from './spotifyCurrentlyPlayingStatus';
 export * from './spotifyTrack';
+export * from './yandexTrackLink';
