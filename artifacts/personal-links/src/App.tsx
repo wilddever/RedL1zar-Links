@@ -101,10 +101,47 @@ const previewTracks: SpotifyCurrentlyPlaying[] = [
   },
 ];
 
+const chaosGlyphs =
+  '∆∿⋮※⟟⧖⸮╳░▒▓⌁⌇⌗⌘⌬⌁⍉⎔⏣⨳⟡⧉⸸ꙮȝƛʭЖЖЖ';
+
+function getChaosGlyph() {
+  return chaosGlyphs[Math.floor(Math.random() * chaosGlyphs.length)];
+}
+
 function getPreviewState(): SpotifyCurrentlyPlaying | null {
   if (!import.meta.env.DEV) return null;
   const index = Math.floor(Date.now() / 15_000) % previewTracks.length;
   return previewTracks[index];
+}
+
+function ChaoticName() {
+  const [symbols, setSymbols] = useState(() =>
+    Array.from({ length: 7 }, getChaosGlyph),
+  );
+
+  useEffect(() => {
+    const timers = symbols.map((_, index) =>
+      window.setInterval(() => {
+        setSymbols((current) =>
+          current.map((symbol, symbolIndex) =>
+            symbolIndex === index ? getChaosGlyph() : symbol,
+          ),
+        );
+      }, 75 + index * 17),
+    );
+
+    return () => timers.forEach((timer) => window.clearInterval(timer));
+  }, []);
+
+  return (
+    <span className="chaos-name" aria-label="RedL1zar">
+      {symbols.map((symbol, index) => (
+        <span aria-hidden="true" className="chaos-name__symbol" key={index}>
+          {symbol}
+        </span>
+      ))}
+    </span>
+  );
 }
 
 function Home() {
@@ -143,8 +180,9 @@ function Home() {
               <span>you found the signal.</span>
             </h1>
             <p className="hero-description" data-testid="text-welcome">
-              A small corner of the internet for things I play, save, listen to,
-              and send into the void.
+              hello. my name is <ChaoticName />, aka redl1zar. its a small
+              corner of the internet for things i play, listen to, and send into
+              the void
             </p>
           </div>
         </section>
@@ -193,22 +231,22 @@ function Home() {
              >
                {copied ? 'handle copied' : 'copy @RedL1zar'}
              </button>
+              <div className="road-sign-stage">
+                <button
+                  aria-label="Покачать дорожный знак"
+                  className={`road-sign-button ${isSignWobbling ? 'road-sign-button--wobbling' : ''}`}
+                  onAnimationEnd={() => setIsSignWobbling(false)}
+                  onClick={() => {
+                    setIsSignWobbling(false);
+                    window.requestAnimationFrame(() => setIsSignWobbling(true));
+                  }}
+                  type="button"
+                >
+                  <img src={roadSign} alt="Дорожный знак с человеком за ноутбуком" />
+                </button>
+              </div>
            </div>
         </footer>
-        <div className="road-sign-stage">
-          <button
-            aria-label="Покачать дорожный знак"
-            className={`road-sign-button ${isSignWobbling ? 'road-sign-button--wobbling' : ''}`}
-            onAnimationEnd={() => setIsSignWobbling(false)}
-            onClick={() => {
-              setIsSignWobbling(false);
-              window.requestAnimationFrame(() => setIsSignWobbling(true));
-            }}
-            type="button"
-          >
-            <img src={roadSign} alt="Дорожный знак с человеком за ноутбуком" />
-          </button>
-        </div>
       </div>
     </main>
   );
