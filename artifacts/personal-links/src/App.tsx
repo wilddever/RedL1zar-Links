@@ -1,5 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SiPinterest, SiSpotify, SiSteam, SiTelegram } from 'react-icons/si';
+import {
+  getCurrentSpotifyTrack,
+  type SpotifyCurrentlyPlaying,
+} from '@workspace/api-client-react';
 
 const platforms = [
   {
@@ -69,6 +73,8 @@ function Home() {
           </div>
         </section>
 
+        <NowPlaying />
+
         <section className="links-section" aria-labelledby="links-title">
           <div className="links-header">
             <h2 id="links-title">Find me in other places</h2>
@@ -113,6 +119,106 @@ function Home() {
         </footer>
       </div>
     </main>
+  );
+}
+
+function NowPlaying() {
+  const [state, setState] = useState<SpotifyCurrentlyPlaying | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    let requestInFlight = false;
+
+    const loadCurrentTrack = async () => {
+      if (requestInFlight) return;
+      requestInFlight = true;
+
+      try {
+        const nextState = await getCurrentSpotifyTrack();
+        if (mounted) setState(nextState);
+      } catch {
+        if (mounted) {
+          setState({
+            status: 'unavailable',
+            track: null,
+            message: 'Spotify временно недоступен',
+          });
+        }
+      } finally {
+        requestInFlight = false;
+      }
+    };
+
+    void loadCurrentTrack();
+    const intervalId = window.setInterval(loadCurrentTrack, 15_000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const track = state?.track;
+  const statusLabel =
+    state?.status === 'playing'
+      ? 'now playing'
+      : state?.status === 'paused'
+        ? 'paused'
+        : 'spotify signal';
+
+  return (
+    <section
+      className={`now-playing-section ${track ? 'now-playing-section--active' : ''}`}
+      aria-labelledby="now-playing-title"
+      aria-live="polite"
+      data-testid="section-now-playing"
+    >
+      <div className="now-playing-header">
+        <div>
+          <div className="eyebrow mono-label">soundcheck</div>
+          <h2 id="now-playing-title">Listening now</h2>
+        </div>
+        <span className="mono-label now-playing-status">{statusLabel}</span>
+      </div>
+
+      {track ? (
+        <a
+          className="now-playing-card"
+          data-testid="link-current-track"
+          href={track.spotifyUrl}
+          rel="noreferrer"
+          target="_blank"
+        >
+          {track.imageUrl ? (
+            <img
+              className="now-playing-art"
+              src={track.imageUrl}
+              alt={`Обложка альбома «${track.album}»`}
+            />
+          ) : (
+            <span className="now-playing-art now-playing-art--empty" aria-hidden="true">
+              <SiSpotify />
+            </span>
+          )}
+          <span className="now-playing-copy">
+            <span className="now-playing-message">{state.message}</span>
+            <strong>{track.title}</strong>
+            <span>{track.artist}</span>
+            <small>{track.album}</small>
+          </span>
+          <span className="now-playing-arrow" aria-hidden="true">
+            ↗
+          </span>
+        </a>
+      ) : (
+        <div className="now-playing-empty" data-testid="status-current-track">
+          <span className="now-playing-empty-icon" aria-hidden="true">
+            <SiSpotify />
+          </span>
+          <span>{state?.message ?? 'Проверяем Spotify…'}</span>
+        </div>
+      )}
+    </section>
   );
 }
 

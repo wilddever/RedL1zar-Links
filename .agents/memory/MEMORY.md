@@ -1,0 +1,1 @@
+- [Spotify polling](spotify-polling.md) — public polling responses must disable caching because the generated fetch treats 304 as an error.

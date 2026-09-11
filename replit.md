@@ -1,6 +1,6 @@
-# [Project name]
+# RedL1zar Personal Links
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Личная страница RedL1zar с социальными ссылками и серверным блоком текущего трека Spotify.
 
 ## Run & Operate
 
@@ -10,6 +10,7 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- Spotify env: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`, `SESSION_SECRET`
 
 ## Stack
 
@@ -22,23 +23,31 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/personal-links/src/App.tsx` — личная страница и блок Listening now
+- `artifacts/api-server/src/lib/spotify.ts` — OAuth, обновление токенов и нормализация Spotify API
+- `artifacts/api-server/src/routes/spotify.ts` — OAuth callback и публичный endpoint текущего трека
+- `lib/db/src/schema/spotify.ts` — серверное хранение refresh token
+- `lib/api-spec/openapi.yaml` — контракт публичного API Spotify
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Spotify access token хранится только в памяти API-сервера и обновляется по refresh token.
+- Refresh token хранится в PostgreSQL в singleton-строке; браузер получает только публичные данные трека.
+- OAuth state подписывается `SESSION_SECRET` и дополнительно сверяется с HttpOnly cookie.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Страница показывает социальные ссылки RedL1zar и текущий Spotify-трек, если он доступен.
+- Публичный блок корректно сообщает о паузе, отсутствии подключения и временной недоступности Spotify.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+ - Общение с владельцем проекта — на русском языке.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- В Spotify Developer Dashboard Redirect URI должен точно совпадать со значением `SPOTIFY_REDIRECT_URI` и вести на `/api/spotify/callback`.
+- Для завершения подключения владелец открывает `/api/spotify/auth`; посетителю не передаются credentials или токены.
 
 ## Pointers
 

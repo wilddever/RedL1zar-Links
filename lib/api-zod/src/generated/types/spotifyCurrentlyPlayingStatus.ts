@@ -5,17 +5,6 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
-}
-
-export interface SpotifyTrack {
-  title: string;
-  artist: string;
-  album: string;
-  imageUrl: string | null;
-  spotifyUrl: string;
-}
 
 export type SpotifyCurrentlyPlayingStatus = typeof SpotifyCurrentlyPlayingStatus[keyof typeof SpotifyCurrentlyPlayingStatus];
 
@@ -28,9 +17,3 @@ export const SpotifyCurrentlyPlayingStatus = {
   not_connected: 'not_connected',
   unavailable: 'unavailable',
 } as const;
-
-export interface SpotifyCurrentlyPlaying {
-  status: SpotifyCurrentlyPlayingStatus;
-  track: SpotifyTrack | null;
-  message: string;
-}

@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: spotify
+    description: Public Spotify now-playing data
 paths:
   /healthz:
     get:
@@ -24,6 +26,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /spotify/currently-playing:
+    get:
+      operationId: getCurrentSpotifyTrack
+      tags: [spotify]
+      summary: Get the public now-playing Spotify track
+      description: Returns normalized playback metadata without exposing Spotify credentials.
+      responses:
+        "200":
+          description: Current playback state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpotifyCurrentlyPlaying"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +48,48 @@ components:
           type: string
       required:
         - status
+    SpotifyTrack:
+      type: object
+      properties:
+        title:
+          type: string
+        artist:
+          type: string
+        album:
+          type: string
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+        spotifyUrl:
+          type: string
+          format: uri
+      required:
+        - title
+        - artist
+        - album
+        - imageUrl
+        - spotifyUrl
+    SpotifyCurrentlyPlaying:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - playing
+            - paused
+            - idle
+            - not_configured
+            - not_connected
+            - unavailable
+        track:
+          allOf:
+            - $ref: "#/components/schemas/SpotifyTrack"
+          nullable: true
+        message:
+          type: string
+      required:
+        - status
+        - track
+        - message
 
