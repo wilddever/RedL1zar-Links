@@ -4,6 +4,7 @@ import {
   clearSpotifyStateCookie,
   completeSpotifyAuthorization,
   getCurrentSpotifyState,
+  getAllowedSpotifyImageUrl,
   getSpotifyAuthorizationUrl,
   getSpotifyNotConfiguredState,
   getSpotifyStateCookie,
@@ -96,6 +97,59 @@ router.get("/spotify/currently-playing", async (req, res) => {
         message: "Spotify временно недоступен",
       }),
     );
+  }
+});
+
+router.get("/spotify/cover", async (req, res) => {
+  const rawUrl = typeof req.query.url === "string" ? req.query.url : "";
+  const imageUrl = getAllowedSpotifyImageUrl(rawUrl);
+  if (!imageUrl) {
+    res.status(400).json({ message: "Недопустимый адрес обложки Spotify." });
+    return;
+  }
+
+  try {
+    const upstream = await fetch(imageUrl, {
+      headers: { Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(8_000),
+    });
+
+    if (!upstream.ok) {
+      res.status(upstream.status === 404 ? 404 : 502).end();
+      return;
+    }
+
+    const resolvedUrl = getAllowedSpotifyImageUrl(upstream.url);
+    const contentType = upstream.headers.get("content-type")?.split(";")[0];
+    const contentLength = Number(upstream.headers.get("content-length") ?? "0");
+    if (
+      !resolvedUrl ||
+      !contentType?.startsWith("image/") ||
+      (contentLength > 5 * 1024 * 1024)
+    ) {
+      res.status(502).end();
+      return;
+    }
+
+    const image = Buffer.from(await upstream.arrayBuffer());
+    if (image.byteLength > 5 * 1024 * 1024) {
+      res.status(502).end();
+      return;
+    }
+
+    res
+      .status(200)
+      .set({
+        "Cache-Control":
+          "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+        "Content-Type": contentType,
+        "X-Content-Type-Options": "nosniff",
+      })
+      .send(image);
+  } catch (error) {
+    req.log.warn({ err: error }, "Spotify cover proxy request failed");
+    res.status(502).end();
   }
 });
 

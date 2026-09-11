@@ -13,6 +13,13 @@ const OWNER_COOKIE = "spotify_owner_session";
 const STATE_MAX_AGE_MS = 10 * 60 * 1000;
 const OWNER_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const ACCESS_TOKEN_SKEW_MS = 60 * 1000;
+const SPOTIFY_IMAGE_HOSTS = new Set([
+  "i.scdn.co",
+  "mosaic.scdn.co",
+  "image-cdn-ak.spotifycdn.com",
+  "image-cdn-fa.spotifycdn.com",
+]);
+const SPOTIFY_COVER_PROXY_PATH = "/api/spotify/cover";
 
 type SpotifyTokenResponse = {
   access_token: string;
@@ -86,6 +93,25 @@ function getConfig(): SpotifyConfig | null {
     sessionSecret,
     ownerToken: process.env.SPOTIFY_OWNER_TOKEN?.trim() || null,
   };
+}
+
+export function getAllowedSpotifyImageUrl(rawUrl: string): URL | null {
+  try {
+    const url = new URL(rawUrl);
+    if (url.protocol !== "https:" || !SPOTIFY_IMAGE_HOSTS.has(url.hostname)) {
+      return null;
+    }
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+export function getSpotifyImageUrl(rawUrl: string): string {
+  const url = getAllowedSpotifyImageUrl(rawUrl);
+  return url
+    ? `${SPOTIFY_COVER_PROXY_PATH}?url=${encodeURIComponent(url.toString())}`
+    : rawUrl;
 }
 
 export function isSpotifyConfigured(): boolean {
@@ -342,7 +368,8 @@ function normalizePlayback(
     .filter((name): name is string => Boolean(name))
     .join(", ");
   const album = item.album?.name?.trim() || "Без названия альбома";
-  const imageUrl = item.album?.images?.[0]?.url?.trim() || "";
+  const sourceImageUrl = item.album?.images?.[0]?.url?.trim() || "";
+  const imageUrl = sourceImageUrl ? getSpotifyImageUrl(sourceImageUrl) : "";
   const spotifyUrl = item.external_urls?.spotify?.trim() || "";
 
   if (!artist || !spotifyUrl) {
