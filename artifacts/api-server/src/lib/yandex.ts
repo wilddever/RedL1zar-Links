@@ -45,6 +45,10 @@ function getTrackUrl(track: YandexTrack): string | null {
   return `https://music.yandex.ru/album/${encodeURIComponent(String(albumId))}/track/${encodeURIComponent(String(trackId))}`;
 }
 
+function getSearchText(title: string, artist: string, album?: string): string {
+  return [title, artist, album].filter(Boolean).join(" ").trim();
+}
+
 function chooseTrack(
   results: YandexTrack[],
   title: string,
@@ -73,7 +77,7 @@ export async function findYandexTrack(
   artist: string,
   album?: string,
 ): Promise<YandexTrackLink | null> {
-  const text = [title, artist, album].filter(Boolean).join(" ").trim();
+  const text = getSearchText(title, artist, album);
   if (!text) return null;
 
   const params = new URLSearchParams({
@@ -107,10 +111,11 @@ export function getYandexSearchUrl(
   artist: string,
   album?: string,
 ): string {
-  const text = [title, artist, album].filter(Boolean).join(" ").trim();
+  const text = getSearchText(title, artist, album);
   if (!text) return YANDEX_404_URL;
 
-  return `${YANDEX_WEB_SEARCH_URL}?text=${encodeURIComponent(text)}`;
+  const params = new URLSearchParams({ text });
+  return `${YANDEX_WEB_SEARCH_URL}?${params.toString()}`;
 }
 
 export { YANDEX_404_URL };

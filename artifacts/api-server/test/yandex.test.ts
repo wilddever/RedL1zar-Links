@@ -132,19 +132,24 @@ test("uses web search when the Yandex API is unavailable in the region", async (
     async () => new Response(null, { status: 451 }),
   );
 
+  const title = `Rock & Roll "Live" / 夜の歌`;
+  const artist = `AC/DC & “Север”`;
+  const album = `Best / Лучшее & More`;
+  const expectedText = `${title} ${artist} ${album}`;
+
   const { server, url } = await startTestServer();
   try {
     const response = await requestTrack(url, {
-      title: "Региональный трек",
-      artist: "Локальный артист",
-      album: "Альбом",
+      title,
+      artist,
+      album,
     });
 
     assert.equal(response.status, 200);
-    assert.equal(
-      response.body.url,
-      "https://music.yandex.ru/search?text=%D0%A0%D0%B5%D0%B3%D0%B8%D0%BE%D0%BD%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%82%D1%80%D0%B5%D0%BA%20%D0%9B%D0%BE%D0%BA%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D0%B0%D1%80%D1%82%D0%B8%D1%81%D1%82%20%D0%90%D0%BB%D1%8C%D0%B1%D0%BE%D0%BC",
-    );
+    const searchUrl = new URL(response.body.url ?? "");
+    assert.equal(searchUrl.origin + searchUrl.pathname, "https://music.yandex.ru/search");
+    assert.deepEqual([...searchUrl.searchParams.keys()], ["text"]);
+    assert.equal(searchUrl.searchParams.get("text"), expectedText);
     assert.notEqual(response.body.url, "https://music.yandex.ru/404");
   } finally {
     await closeTestServer(server);
