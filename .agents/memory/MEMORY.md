@@ -1,1 +1,2 @@
 - [Spotify polling](spotify-polling.md) — public polling responses must disable caching because the generated fetch treats 304 as an error.
+- [Workspace dependency installs](pnpm-workspace-install.md) — verify workspace config after pnpm adds a package because formatting and override keys may be rewritten.
