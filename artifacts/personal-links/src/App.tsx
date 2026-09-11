@@ -32,26 +32,28 @@ const platforms = [
   },
 ];
 
+type SpotifyConnectionNotice = {
+  kind: 'success' | 'denied' | 'error';
+  message: string;
+};
+
+const spotifyConnectionNotices: Record<string, SpotifyConnectionNotice> = {
+  connected: {
+    kind: 'success',
+    message: 'Spotify подключён. Здесь появится текущий трек.',
+  },
+  denied: {
+    kind: 'denied',
+    message: 'Подключение Spotify отменено.',
+  },
+  error: {
+    kind: 'error',
+    message: 'Не удалось подключить Spotify. Попробуйте ещё раз.',
+  },
+};
+
 function Home() {
   const [copied, setCopied] = useState(false);
-  const [spotifyNotice, setSpotifyNotice] = useState<
-    'connected' | 'error' | null
-  >(null);
-
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const notice = url.searchParams.get('spotify');
-
-    if (notice === 'connected' || notice === 'error') {
-      setSpotifyNotice(notice);
-      url.searchParams.delete('spotify');
-      window.history.replaceState(
-        {},
-        '',
-        `${url.pathname}${url.search}${url.hash}`,
-      );
-    }
-  }, []);
 
   const copyHandle = async () => {
     try {
@@ -91,31 +93,7 @@ function Home() {
           </div>
         </section>
 
-         {spotifyNotice ? (
-           <div
-             className={`spotify-notice spotify-notice--${spotifyNotice}`}
-             role="status"
-             aria-live="polite"
-           >
-             <span className="spotify-notice-mark" aria-hidden="true">
-               {spotifyNotice === 'connected' ? '✓' : '!'}
-             </span>
-             <span>
-               {spotifyNotice === 'connected'
-                 ? 'Spotify подключён. Включите музыку, и текущий трек появится здесь.'
-                 : 'Подключение Spotify не завершено. Проверьте разрешения и попробуйте ещё раз.'}
-             </span>
-             <button
-               className="spotify-notice-close"
-               aria-label="Закрыть сообщение"
-               onClick={() => setSpotifyNotice(null)}
-               type="button"
-             >
-               ×
-             </button>
-           </div>
-         ) : null}
-
+        <SpotifyConnectionNotice />
         <NowPlaying />
 
         <section className="links-section" aria-labelledby="links-title">
@@ -168,6 +146,51 @@ function Home() {
   );
 }
 
+function SpotifyConnectionNotice() {
+  const [notice, setNotice] = useState<SpotifyConnectionNotice | null>(null);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const noticeParam = url.searchParams.get('spotify');
+    const nextNotice = noticeParam
+      ? spotifyConnectionNotices[noticeParam]
+      : undefined;
+
+    if (!nextNotice) return;
+
+    setNotice(nextNotice);
+    url.searchParams.delete('spotify');
+    window.history.replaceState(
+      window.history.state,
+      document.title,
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+
+    const timeoutId = window.setTimeout(() => setNotice(null), 6500);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  if (!notice) return null;
+
+  return (
+    <div
+      aria-live="polite"
+      className={`spotify-connection-notice spotify-connection-notice--${notice.kind}`}
+      data-testid={`status-spotify-${notice.kind}`}
+      role={notice.kind === 'error' ? 'alert' : 'status'}
+    >
+      <span>{notice.message}</span>
+      <button
+        aria-label="Закрыть уведомление Spotify"
+        className="spotify-connection-notice-dismiss"
+        onClick={() => setNotice(null)}
+        type="button"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
 function SpotifyOwnerConnect() {
   const [isOpen, setIsOpen] = useState(false);
   const [token, setToken] = useState('');

@@ -207,6 +207,58 @@
   line-height: 1.55;
 }
 
+.spotify-connection-notice {
+  position: fixed;
+  top: 1.25rem;
+  right: max(1rem, calc((100vw - 1120px) / 2));
+  z-index: 10;
+  display: flex;
+  max-width: min(28rem, calc(100vw - 2rem));
+  align-items: center;
+  gap: .8rem;
+  padding: .75rem .8rem .75rem 1rem;
+  color: hsl(var(--foreground));
+  border: 1px solid hsla(83, 62%, 62%, .55);
+  border-radius: .8rem;
+  background: hsl(213 29% 10% / .94);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, .32);
+  font-size: .78rem;
+  line-height: 1.35;
+  backdrop-filter: blur(12px);
+  animation: rise-in .35s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.spotify-connection-notice--denied,
+.spotify-connection-notice--error {
+  border-color: hsla(4, 82%, 60%, .65);
+}
+
+.spotify-connection-notice-dismiss {
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 1.5rem;
+  place-items: center;
+  padding: 0;
+  color: hsl(var(--muted-foreground));
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.spotify-connection-notice-dismiss:hover {
+  color: hsl(var(--foreground));
+  background: hsla(210, 25%, 96%, .1);
+}
+
+.spotify-connection-notice-dismiss:focus-visible {
+  outline: 2px solid hsl(var(--secondary));
+  outline-offset: 2px;
+}
+
 .now-playing-section {
   margin-bottom: 5rem;
   animation: rise-in .8s .2s cubic-bezier(.2,.8,.2,1) both;

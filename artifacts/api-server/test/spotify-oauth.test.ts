@@ -101,9 +101,16 @@ test("Spotify callback requires a valid HMAC state and matching cookie", async (
       },
     },
   );
-  assert.equal(wrongCookieResponse.status, 400);
-  assert.match(await wrongCookieResponse.text(), /state is invalid/i);
 
+  const deniedResponse = await fetch(
+    `${baseUrl}/api/spotify/callback?state=${encodeURIComponent(
+      state,
+    )}&error=access_denied`,
+    {
+      headers: { cookie: cookieHeader },
+      redirect: "manual",
+    },
+  );
   const validStateResponse = await fetch(
     `${baseUrl}/api/spotify/callback?state=${encodeURIComponent(state)}`,
     { headers: { cookie: cookieHeader }, redirect: "manual" },

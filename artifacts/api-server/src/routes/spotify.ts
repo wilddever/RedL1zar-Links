@@ -63,7 +63,7 @@ router.get("/spotify/callback", async (req, res) => {
 
   clearSpotifyStateCookie(req);
   if (typeof req.query.error === "string") {
-    res.redirect("/?spotify=error");
+    res.redirect("/?spotify=denied");
     return;
   }
 
