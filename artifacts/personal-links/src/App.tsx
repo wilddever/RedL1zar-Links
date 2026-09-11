@@ -7,6 +7,7 @@ import {
 } from '@workspace/api-client-react';
 import rztLogo from '../../../attached_assets/photo_2026-01-18_13-43-45_1789144600817.jpg';
 import roadSign from '../../../attached_assets/Picsart_26-09-11_21-29-09-376_1789144606943.png';
+import yandexMusicLogo from '../../../attached_assets/изображение_1789152023645.png';
 
 const platforms = [
   {
@@ -588,12 +589,8 @@ function NowPlaying() {
       </div>
 
       {track ? (
-        <a
+        <div
           className="now-playing-card"
-          data-testid="link-current-track"
-          href={track.spotifyUrl}
-          rel="noreferrer"
-          target="_blank"
         >
           {coverUrl ? (
             <img className="now-playing-liquid-art" src={coverUrl} alt="" aria-hidden="true" />
@@ -617,10 +614,29 @@ function NowPlaying() {
             <span>{track.artist}</span>
             <small>{track.album}</small>
           </span>
-          <span className="now-playing-arrow" aria-hidden="true">
-            ↗
+          <span className="now-playing-card-actions">
+            <a
+              aria-label="Открыть текущий трек в Spotify"
+              className="now-playing-arrow"
+              data-testid="link-current-track"
+              href={track.spotifyUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              ↗
+            </a>
+            <a
+              aria-label="Открыть текущий трек в Яндекс Музыке"
+              className="now-playing-yandex-icon"
+              data-testid="link-current-track-yandex"
+              href={yandexHref}
+              rel="noreferrer"
+              target="_blank"
+            >
+              <img src={yandexMusicLogo} alt="" />
+            </a>
           </span>
-        </a>
+        </div>
       ) : (
         <div className="now-playing-empty" data-testid="status-current-track">
           <span className="now-playing-empty-icon" aria-hidden="true">
@@ -629,21 +645,6 @@ function NowPlaying() {
           <span>{state?.message ?? 'Проверяем Spotify…'}</span>
         </div>
       )}
-      {track ? (
-        <div className="now-playing-actions">
-          <a
-            className="now-playing-yandex-link"
-            data-testid="link-current-track-yandex"
-            href={yandexHref}
-            rel="noreferrer"
-            target="_blank"
-          >
-            <span className="yandex-mark" aria-hidden="true">Я</span>
-            Open in Яндекс Музыке
-            <ExternalLink aria-hidden="true" />
-          </a>
-        </div>
-      ) : null}
     </section>
   );
 }
