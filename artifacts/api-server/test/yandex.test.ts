@@ -157,6 +157,41 @@ test("uses web search when the Yandex API is unavailable in the region", async (
   }
 });
 
+test("uses web search when the Yandex API returns malformed JSON", async () => {
+  mock.method(
+    globalThis,
+    "fetch",
+    async () =>
+      new Response('{"result":', {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+  );
+
+  const title = `Rock & Roll "Live" / 夜の歌`;
+  const artist = `AC/DC & “Север”`;
+  const album = `Best / Лучшее & More`;
+  const expectedText = `${title} ${artist} ${album}`;
+
+  const { server, url } = await startTestServer();
+  try {
+    const response = await requestTrack(url, {
+      title,
+      artist,
+      album,
+    });
+
+    assert.equal(response.status, 200);
+    const searchUrl = new URL(response.body.url ?? "");
+    assert.equal(searchUrl.origin + searchUrl.pathname, "https://music.yandex.ru/search");
+    assert.equal(searchUrl.searchParams.get("text"), expectedText);
+    assert.notEqual(response.body.url, "https://music.yandex.ru/404");
+  } finally {
+    await closeTestServer(server);
+    mock.restoreAll();
+  }
+});
+
 test("uses web search when the API returns no usable track", async () => {
   mock.method(
     globalThis,
