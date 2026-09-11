@@ -39,6 +39,25 @@ const platforms = [
   },
 ];
 
+const spotifyImageHosts = new Set([
+  'i.scdn.co',
+  'mosaic.scdn.co',
+  'image-cdn-ak.spotifycdn.com',
+  'image-cdn-fa.spotifycdn.com',
+]);
+
+function getSpotifyCoverUrl(imageUrl: string): string {
+  try {
+    const url = new URL(imageUrl);
+    if (url.protocol !== 'https:' || !spotifyImageHosts.has(url.hostname)) {
+      return imageUrl;
+    }
+    return `/api/spotify/cover?url=${encodeURIComponent(url.toString())}`;
+  } catch {
+    return imageUrl;
+  }
+}
+
 function Home() {
   const [copied, setCopied] = useState(false);
 
@@ -201,7 +220,7 @@ function NowPlaying() {
           {track.imageUrl ? (
             <img
               className="now-playing-art"
-              src={track.imageUrl}
+                src={getSpotifyCoverUrl(track.imageUrl)}
               alt={`Обложка альбома «${track.album}»`}
             />
           ) : (

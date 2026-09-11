@@ -19,7 +19,6 @@ const SPOTIFY_IMAGE_HOSTS = new Set([
   "image-cdn-ak.spotifycdn.com",
   "image-cdn-fa.spotifycdn.com",
 ]);
-const SPOTIFY_COVER_PROXY_PATH = "/api/spotify/cover";
 
 type SpotifyTokenResponse = {
   access_token: string;
@@ -105,13 +104,6 @@ export function getAllowedSpotifyImageUrl(rawUrl: string): URL | null {
   } catch {
     return null;
   }
-}
-
-export function getSpotifyImageUrl(rawUrl: string): string {
-  const url = getAllowedSpotifyImageUrl(rawUrl);
-  return url
-    ? `${SPOTIFY_COVER_PROXY_PATH}?url=${encodeURIComponent(url.toString())}`
-    : rawUrl;
 }
 
 export function isSpotifyConfigured(): boolean {
@@ -368,8 +360,7 @@ function normalizePlayback(
     .filter((name): name is string => Boolean(name))
     .join(", ");
   const album = item.album?.name?.trim() || "Без названия альбома";
-  const sourceImageUrl = item.album?.images?.[0]?.url?.trim() || "";
-  const imageUrl = sourceImageUrl ? getSpotifyImageUrl(sourceImageUrl) : "";
+  const imageUrl = item.album?.images?.[0]?.url?.trim() || "";
   const spotifyUrl = item.external_urls?.spotify?.trim() || "";
 
   if (!artist || !spotifyUrl) {
