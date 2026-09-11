@@ -298,6 +298,7 @@ function NowPlaying() {
   }, []);
 
   const track = state?.track;
+  const coverUrl = track?.imageUrl ? getSpotifyCoverUrl(track.imageUrl) : null;
   const statusLabel =
     state?.status === 'playing'
       ? 'now playing'
@@ -328,6 +329,11 @@ function NowPlaying() {
           rel="noreferrer"
           target="_blank"
         >
+          {coverUrl ? (
+            <img className="now-playing-liquid-art" src={coverUrl} alt="" aria-hidden="true" />
+          ) : (
+            <span className="now-playing-liquid-fallback" aria-hidden="true" />
+          )}
           {track.imageUrl ? (
             <img
               className="now-playing-art"

@@ -92,6 +92,16 @@
   70% { transform: rotate(2.5deg); }
 }
 
+@keyframes liquid-cover-drift {
+  0%, 100% { transform: scale(1.24) translate3d(-3%, -2%, 0) rotate(-2deg); }
+  50% { transform: scale(1.32) translate3d(3%, 2%, 0) rotate(2deg); }
+}
+
+@keyframes liquid-cover-shimmer {
+  0%, 100% { transform: translate3d(-5%, 2%, 0) rotate(0deg); opacity: .24; }
+  50% { transform: translate3d(5%, -2%, 0) rotate(8deg); opacity: .4; }
+}
+
 .page-shell {
   position: relative;
   min-height: 100dvh;
@@ -280,8 +290,53 @@
 
 .now-playing-card {
   position: relative;
+  overflow: hidden;
+  isolation: isolate;
   text-decoration: none;
   transition: transform .3s cubic-bezier(.2,.8,.2,1), background-color .3s ease, border-color .3s ease;
+}
+
+.now-playing-card::after {
+  position: absolute;
+  inset: -35%;
+  z-index: 0;
+  content: '';
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, .25), transparent 30%),
+    linear-gradient(120deg, rgba(255, 255, 255, .12), transparent 42%, rgba(121, 255, 207, .2));
+  filter: blur(28px);
+  mix-blend-mode: screen;
+  animation: liquid-cover-shimmer 11s ease-in-out infinite;
+}
+
+.now-playing-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.now-playing-liquid-art,
+.now-playing-liquid-fallback {
+  position: absolute !important;
+  inset: -24% !important;
+  z-index: 0 !important;
+  width: 148% !important;
+  height: 148% !important;
+  max-width: none;
+  object-fit: cover;
+  pointer-events: none;
+  filter: blur(24px) saturate(1.65) contrast(1.05);
+  opacity: .42;
+  mix-blend-mode: screen;
+  animation: liquid-cover-drift 15s ease-in-out infinite alternate;
+}
+
+.now-playing-liquid-fallback {
+  background:
+    radial-gradient(circle at 24% 24%, rgba(237, 92, 104, .88), transparent 32%),
+    radial-gradient(circle at 78% 30%, rgba(94, 213, 178, .75), transparent 34%),
+    radial-gradient(circle at 52% 82%, rgba(86, 112, 231, .86), transparent 38%),
+    hsl(213 29% 13%);
 }
 
 .now-playing-card:hover {
@@ -514,7 +569,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  width: clamp(2.5rem, 5vw, 3.4rem);
+  width: clamp(1.6rem, 3vw, 2.15rem);
   aspect-ratio: 317 / 1025;
   margin: 0;
   overflow: visible;
@@ -568,7 +623,7 @@
   .platform-link { min-height: 86px; }
   .footer-bar { align-items: flex-start; flex-direction: column; padding-top: 2.5rem; }
   .footer-actions { width: 100%; justify-content: space-between; }
-  .road-sign-stage { width: 2.8rem; }
+  .road-sign-stage { width: 1.85rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
