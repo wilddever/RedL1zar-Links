@@ -7,6 +7,8 @@ import {
   getSpotifyAuthorizationUrl,
   getSpotifyNotConfiguredState,
   getSpotifyStateCookie,
+  authorizeSpotifyOwner,
+  isSpotifyOwner,
   isSpotifyConfigured,
   validateSpotifyCallback,
 } from "../lib/spotify";
@@ -14,6 +16,13 @@ import {
 const router: IRouter = Router();
 
 router.get("/spotify/auth", (req, res) => {
+  if (!authorizeSpotifyOwner(req)) {
+    res
+      .status(403)
+      .send("Spotify authorization is restricted to the page owner.");
+    return;
+  }
+
   const authorizationUrl = getSpotifyAuthorizationUrl(req);
   if (!authorizationUrl) {
     res.status(503).json(getSpotifyNotConfiguredState());
@@ -23,6 +32,13 @@ router.get("/spotify/auth", (req, res) => {
 });
 
 router.get("/spotify/callback", async (req, res) => {
+  if (!isSpotifyOwner(req)) {
+    res
+      .status(403)
+      .send("Spotify authorization is restricted to the page owner.");
+    return;
+  }
+
   if (!isSpotifyConfigured()) {
     res.status(503).send("Spotify is not configured on the server.");
     return;

@@ -9,7 +9,9 @@ const SPOTIFY_CURRENTLY_PLAYING_URL =
   "https://api.spotify.com/v1/me/player/currently-playing";
 const SPOTIFY_SCOPE = "user-read-currently-playing user-read-playback-state";
 const STATE_COOKIE = "spotify_oauth_state";
+const OWNER_COOKIE = "spotify_owner_session";
 const STATE_MAX_AGE_MS = 10 * 60 * 1000;
+const OWNER_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const ACCESS_TOKEN_SKEW_MS = 60 * 1000;
 
 type SpotifyTokenResponse = {
@@ -54,6 +56,7 @@ type SpotifyConfig = {
   clientSecret: string;
   redirectUri: string;
   sessionSecret: string;
+  ownerToken: string | null;
 };
 
 let accessTokenCache:
@@ -76,7 +79,13 @@ function getConfig(): SpotifyConfig | null {
     return null;
   }
 
-  return { clientId, clientSecret, redirectUri, sessionSecret };
+  return {
+    clientId,
+    clientSecret,
+    redirectUri,
+    sessionSecret,
+    ownerToken: process.env.SPOTIFY_OWNER_TOKEN?.trim() || null,
+  };
 }
 
 export function isSpotifyConfigured(): boolean {
@@ -86,6 +95,16 @@ export function isSpotifyConfigured(): boolean {
 function serializeCookie(name: string, value: string, maxAge: number): string {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   return `${name}=${encodeURIComponent(value)}; Max-Age=${Math.floor(maxAge / 1000)}; Path=/api/spotify; HttpOnly; SameSite=Lax${secure}`;
+}
+
+function appendCookie(request: Request, cookie: string): void {
+  const existing = request.res?.getHeader("Set-Cookie");
+  const cookies = Array.isArray(existing)
+    ? existing.map(String)
+    : existing
+      ? [String(existing)]
+      : [];
+  request.res?.setHeader("Set-Cookie", [...cookies, cookie]);
 }
 
 function readCookie(request: Request, name: string): string | null {
@@ -124,6 +143,40 @@ function isValidState(value: string | null, sessionSecret: string): boolean {
     actualBuffer.length === expectedBuffer.length &&
     timingSafeEqual(actualBuffer, expectedBuffer)
   );
+}
+
+function hasMatchingSecret(provided: string | null, expected: string | null) {
+  if (!provided || !expected) return false;
+
+  const providedBuffer = Buffer.from(provided, "utf8");
+  const expectedBuffer = Buffer.from(expected, "utf8");
+  return (
+    providedBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(providedBuffer, expectedBuffer)
+  );
+}
+
+function createOwnerSession(sessionSecret: string, ownerToken: string): string {
+  const nonce = randomBytes(32).toString("hex");
+  const signature = createHmac("sha256", sessionSecret)
+    .update(`spotify-owner:${ownerToken}:${nonce}`)
+    .digest("hex");
+  return `${nonce}.${signature}`;
+}
+
+function isValidOwnerSession(
+  value: string | null,
+  sessionSecret: string,
+  ownerToken: string,
+): boolean {
+  if (!value) return false;
+  const [nonce, signature] = value.split(".");
+  if (!nonce || !signature || !/^[a-f0-9]{64}$/.test(nonce)) return false;
+
+  const expected = createHmac("sha256", sessionSecret)
+    .update(`spotify-owner:${ownerToken}:${nonce}`)
+    .digest("hex");
+  return hasMatchingSecret(signature, expected);
 }
 
 async function getStoredConnection() {
@@ -312,8 +365,8 @@ export function getSpotifyAuthorizationUrl(request: Request): string | null {
   if (!config) return null;
 
   const state = createState(config.sessionSecret);
-  request.res!.setHeader(
-    "Set-Cookie",
+  appendCookie(
+    request,
     serializeCookie(STATE_COOKIE, state, STATE_MAX_AGE_MS),
   );
 
@@ -327,6 +380,51 @@ export function getSpotifyAuthorizationUrl(request: Request): string | null {
   });
 
   return `${SPOTIFY_AUTHORIZE_URL}?${params.toString()}`;
+}
+
+export function authorizeSpotifyOwner(request: Request): boolean {
+  const config = getConfig();
+  if (!config?.ownerToken) return false;
+
+  if (
+    isValidOwnerSession(
+      readCookie(request, OWNER_COOKIE),
+      config.sessionSecret,
+      config.ownerToken,
+    )
+  ) {
+    return true;
+  }
+
+  const providedToken =
+    request.get("x-spotify-owner-token") ??
+    (typeof request.query.owner_token === "string"
+      ? request.query.owner_token
+      : null);
+  if (!hasMatchingSecret(providedToken, config.ownerToken)) return false;
+
+  appendCookie(
+    request,
+    serializeCookie(
+      OWNER_COOKIE,
+      createOwnerSession(config.sessionSecret, config.ownerToken),
+      OWNER_MAX_AGE_MS,
+    ),
+  );
+  return true;
+}
+
+export function isSpotifyOwner(request: Request): boolean {
+  const config = getConfig();
+  return Boolean(
+    config &&
+      config.ownerToken &&
+      isValidOwnerSession(
+        readCookie(request, OWNER_COOKIE),
+        config.sessionSecret,
+        config.ownerToken,
+      ),
+  );
 }
 
 export function validateSpotifyCallback(
@@ -346,8 +444,8 @@ export async function completeSpotifyAuthorization(
 }
 
 export function clearSpotifyStateCookie(request: Request): void {
-  request.res!.setHeader(
-    "Set-Cookie",
+  appendCookie(
+    request,
     serializeCookie(STATE_COOKIE, "", 0),
   );
 }

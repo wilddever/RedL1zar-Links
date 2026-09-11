@@ -10,7 +10,7 @@
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
-- Spotify env: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`, `SESSION_SECRET`
+- Spotify env: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`, `SESSION_SECRET`, `SPOTIFY_OWNER_TOKEN`
 
 ## Stack
 
@@ -34,6 +34,7 @@
 - Spotify access token хранится только в памяти API-сервера и обновляется по refresh token.
 - Refresh token хранится в PostgreSQL в singleton-строке; браузер получает только публичные данные трека.
 - OAuth state подписывается `SESSION_SECRET` и дополнительно сверяется с HttpOnly cookie.
+- OAuth-подключение владельца защищено `SPOTIFY_OWNER_TOKEN`: первый переход на `/api/spotify/auth?owner_token=...` выдаёт подписанную HttpOnly cookie, после чего токен в URL больше не нужен.
 
 ## Product
 
@@ -47,7 +48,7 @@
 ## Gotchas
 
 - В Spotify Developer Dashboard Redirect URI должен точно совпадать со значением `SPOTIFY_REDIRECT_URI` и вести на `/api/spotify/callback`.
-- Для завершения подключения владелец открывает `/api/spotify/auth`; посетителю не передаются credentials или токены.
+- Для завершения подключения владелец открывает `/api/spotify/auth?owner_token=...`; посетителю не передаются credentials, owner token или Spotify-токены.
 
 ## Pointers
 
