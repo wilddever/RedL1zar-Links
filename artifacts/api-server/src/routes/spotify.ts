@@ -31,6 +31,16 @@ router.get("/spotify/auth", (req, res) => {
   res.redirect(authorizationUrl);
 });
 
+router.post("/spotify/owner-session", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  if (!authorizeSpotifyOwner(req)) {
+    res.status(403).json({ ok: false, message: "Неверный owner token." });
+    return;
+  }
+
+  res.json({ ok: true });
+});
+
 router.get("/spotify/callback", async (req, res) => {
   if (!isSpotifyOwner(req)) {
     res

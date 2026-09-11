@@ -108,17 +108,94 @@ function Home() {
           <span className="mono-label" data-testid="text-footer">
             built for wandering / © RedL1zar
           </span>
-          <button
-            className="copy-button"
-            data-testid="button-copy-handle"
-            onClick={copyHandle}
-            type="button"
-          >
-            {copied ? 'handle copied' : 'copy @RedL1zar'}
-          </button>
+           <div className="footer-actions">
+             <SpotifyOwnerConnect />
+             <button
+               className="copy-button"
+               data-testid="button-copy-handle"
+               onClick={copyHandle}
+               type="button"
+             >
+               {copied ? 'handle copied' : 'copy @RedL1zar'}
+             </button>
+           </div>
         </footer>
       </div>
     </main>
+  );
+}
+
+function SpotifyOwnerConnect() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [token, setToken] = useState('');
+  const [status, setStatus] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const connectSpotify = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!token.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setStatus(null);
+
+    try {
+      const response = await fetch('/api/spotify/owner-session', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'x-spotify-owner-token': token.trim(),
+        },
+      });
+
+      if (!response.ok) {
+        setStatus('Не удалось подтвердить owner token');
+        return;
+      }
+
+      window.location.assign('/api/spotify/auth');
+    } catch {
+      setStatus('Сервер Spotify недоступен');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="spotify-owner-connect">
+      <button
+        className="copy-button"
+        data-testid="button-connect-spotify"
+        onClick={() => {
+          setIsOpen((open) => !open);
+          setStatus(null);
+        }}
+        type="button"
+      >
+        {isOpen ? 'close spotify setup' : 'connect spotify'}
+      </button>
+      {isOpen ? (
+        <form className="spotify-owner-form" onSubmit={connectSpotify}>
+          <label htmlFor="spotify-owner-token">owner token</label>
+          <div className="spotify-owner-form-row">
+            <input
+              autoComplete="off"
+              id="spotify-owner-token"
+              onChange={(event) => setToken(event.target.value)}
+              placeholder="введите ваш owner token"
+              type="password"
+              value={token}
+            />
+            <button className="copy-button" disabled={isSubmitting} type="submit">
+              {isSubmitting ? 'checking…' : 'continue'}
+            </button>
+          </div>
+          <small>
+            Токен нужен только для запуска подключения и не сохраняется на странице.
+          </small>
+          {status ? <span className="spotify-owner-error">{status}</span> : null}
+        </form>
+      ) : null}
+    </div>
   );
 }
 
