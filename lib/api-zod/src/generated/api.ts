@@ -32,3 +32,5 @@ export const GetCurrentSpotifyTrackResponse = zod.object({
 }).nullable(),
   "message": zod.string()
 })
+
+

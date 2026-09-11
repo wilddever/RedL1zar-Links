@@ -34,3 +34,4 @@ export interface SpotifyCurrentlyPlaying {
   track: SpotifyTrack | null;
   message: string;
 }
+

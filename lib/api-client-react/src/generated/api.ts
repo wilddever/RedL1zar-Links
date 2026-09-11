@@ -196,3 +196,10 @@ export function useGetCurrentSpotifyTrack<TData = Awaited<ReturnType<typeof getC
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+
+
+
+
+
+

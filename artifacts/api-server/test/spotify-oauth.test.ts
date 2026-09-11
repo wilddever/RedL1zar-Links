@@ -106,8 +106,8 @@ test("Spotify callback requires a valid HMAC state and matching cookie", async (
 
   const validStateResponse = await fetch(
     `${baseUrl}/api/spotify/callback?state=${encodeURIComponent(state)}`,
-    { headers: { cookie: cookieHeader } },
+    { headers: { cookie: cookieHeader }, redirect: "manual" },
   );
-  assert.equal(validStateResponse.status, 400);
-  assert.match(await validStateResponse.text(), /authorization code/i);
+  assert.equal(validStateResponse.status, 302);
+  assert.equal(validStateResponse.headers.get("location"), "/?spotify=error");
 });

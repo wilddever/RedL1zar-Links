@@ -34,6 +34,24 @@ const platforms = [
 
 function Home() {
   const [copied, setCopied] = useState(false);
+  const [spotifyNotice, setSpotifyNotice] = useState<
+    'connected' | 'error' | null
+  >(null);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const notice = url.searchParams.get('spotify');
+
+    if (notice === 'connected' || notice === 'error') {
+      setSpotifyNotice(notice);
+      url.searchParams.delete('spotify');
+      window.history.replaceState(
+        {},
+        '',
+        `${url.pathname}${url.search}${url.hash}`,
+      );
+    }
+  }, []);
 
   const copyHandle = async () => {
     try {
@@ -72,6 +90,31 @@ function Home() {
             </p>
           </div>
         </section>
+
+         {spotifyNotice ? (
+           <div
+             className={`spotify-notice spotify-notice--${spotifyNotice}`}
+             role="status"
+             aria-live="polite"
+           >
+             <span className="spotify-notice-mark" aria-hidden="true">
+               {spotifyNotice === 'connected' ? '✓' : '!'}
+             </span>
+             <span>
+               {spotifyNotice === 'connected'
+                 ? 'Spotify подключён. Включите музыку, и текущий трек появится здесь.'
+                 : 'Подключение Spotify не завершено. Проверьте разрешения и попробуйте ещё раз.'}
+             </span>
+             <button
+               className="spotify-notice-close"
+               aria-label="Закрыть сообщение"
+               onClick={() => setSpotifyNotice(null)}
+               type="button"
+             >
+               ×
+             </button>
+           </div>
+         ) : null}
 
         <NowPlaying />
 

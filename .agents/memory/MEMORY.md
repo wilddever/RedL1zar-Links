@@ -1,2 +1,3 @@
 - [Spotify polling](spotify-polling.md) — public polling responses must disable caching because the generated fetch treats 304 as an error.
+- [Spotify owner authorization](spotify-owner-auth.md) — accept the owner token only to mint an HttpOnly session; never put it in an authorization URL.
 - [Workspace dependency installs](pnpm-workspace-install.md) — verify workspace config after pnpm adds a package because formatting and override keys may be rewritten.
