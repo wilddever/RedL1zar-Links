@@ -5,6 +5,8 @@ import {
   getCurrentSpotifyTrack,
   type SpotifyCurrentlyPlaying,
 } from '@workspace/api-client-react';
+import rztLogo from '../../../attached_assets/photo_2026-01-18_13-43-45_1789144600817.jpg';
+import roadSign from '../../../attached_assets/Picsart_26-09-11_21-29-09-376_1789144606943.png';
 
 const platforms = [
   {
@@ -12,30 +14,35 @@ const platforms = [
     handle: 'steamcommunity / RedL1zar',
     href: 'https://steamcommunity.com/id/RedL1zar/',
     icon: SiSteam,
+    logo: null,
   },
   {
     name: 'Pinterest',
     handle: 'pin.it / 6Ni8NpFtk',
     href: 'https://pin.it/6Ni8NpFtk',
     icon: SiPinterest,
+    logo: null,
   },
   {
     name: 'Spotify',
     handle: 'spotify / RedL1zar',
     href: 'https://open.spotify.com/user/31qwvdcqd7w5laybiacxk2lrgzr4',
     icon: SiSpotify,
+    logo: null,
   },
   {
     name: 'Telegram',
     handle: 't.me / RedL1zar',
     href: 'https://t.me/RedL1zar',
     icon: SiTelegram,
+    logo: null,
   },
   {
     name: 'Риса За Творчество',
     handle: 'risazatvorchestvo.com / user / 47275',
     href: 'https://risazatvorchestvo.com/user/47275',
     icon: ExternalLink,
+    logo: rztLogo,
   },
 ];
 
@@ -58,8 +65,51 @@ function getSpotifyCoverUrl(imageUrl: string): string {
   }
 }
 
+const previewTracks: SpotifyCurrentlyPlaying[] = [
+  {
+    status: 'playing',
+    track: {
+      title: 'Midnight Signal',
+      artist: 'Preview FM',
+      album: 'Local Broadcast',
+      imageUrl: null,
+      spotifyUrl: 'https://open.spotify.com/',
+    },
+    message: 'Preview loop / demo signal',
+  },
+  {
+    status: 'playing',
+    track: {
+      title: 'Field Notes',
+      artist: 'RedL1zar Radio',
+      album: 'Somewhere Online',
+      imageUrl: null,
+      spotifyUrl: 'https://open.spotify.com/',
+    },
+    message: 'Preview loop / demo signal',
+  },
+  {
+    status: 'paused',
+    track: {
+      title: 'Signal Lost, Signal Found',
+      artist: 'Night Drive Unit',
+      album: 'Static Weather',
+      imageUrl: null,
+      spotifyUrl: 'https://open.spotify.com/',
+    },
+    message: 'Preview loop / demo signal',
+  },
+];
+
+function getPreviewState(): SpotifyCurrentlyPlaying | null {
+  if (!import.meta.env.DEV) return null;
+  const index = Math.floor(Date.now() / 15_000) % previewTracks.length;
+  return previewTracks[index];
+}
+
 function Home() {
   const [copied, setCopied] = useState(false);
+  const [isSignWobbling, setIsSignWobbling] = useState(false);
 
   const copyHandle = async () => {
     try {
@@ -107,7 +157,7 @@ function Home() {
             <span className="mono-label">05 channels</span>
           </div>
           <div className="link-list">
-            {platforms.map(({ name, handle, href, icon: Icon }, index) => (
+            {platforms.map(({ name, handle, href, icon: Icon, logo }, index) => (
               <a
                 className="platform-link"
                 data-testid={`link-platform-${name.toLowerCase()}`}
@@ -117,7 +167,7 @@ function Home() {
                 target="_blank"
               >
                 <span className="platform-icon" aria-hidden="true">
-                  <Icon />
+                  {logo ? <img src={logo} alt="" /> : <Icon />}
                 </span>
                 <span>
                   <span className="platform-name">{name}</span>
@@ -145,6 +195,20 @@ function Home() {
              </button>
            </div>
         </footer>
+        <div className="road-sign-stage">
+          <button
+            aria-label="Покачать дорожный знак"
+            className={`road-sign-button ${isSignWobbling ? 'road-sign-button--wobbling' : ''}`}
+            onAnimationEnd={() => setIsSignWobbling(false)}
+            onClick={() => {
+              setIsSignWobbling(false);
+              window.requestAnimationFrame(() => setIsSignWobbling(true));
+            }}
+            type="button"
+          >
+            <img src={roadSign} alt="Дорожный знак с человеком за ноутбуком" />
+          </button>
+        </div>
       </div>
     </main>
   );
@@ -163,14 +227,22 @@ function NowPlaying() {
 
       try {
         const nextState = await getCurrentSpotifyTrack();
-        if (mounted) setState(nextState);
+        if (mounted) {
+          const previewState =
+            nextState.status === 'not_connected' || nextState.status === 'not_configured'
+              ? getPreviewState()
+              : null;
+          setState(previewState ?? nextState);
+        }
       } catch {
         if (mounted) {
-          setState({
-            status: 'unavailable',
-            track: null,
-            message: 'Spotify временно недоступен',
-          });
+          setState(
+            getPreviewState() ?? {
+              status: 'unavailable',
+              track: null,
+              message: 'Spotify временно недоступен',
+            },
+          );
         }
       } finally {
         requestInFlight = false;
@@ -220,7 +292,7 @@ function NowPlaying() {
           {track.imageUrl ? (
             <img
               className="now-playing-art"
-                src={getSpotifyCoverUrl(track.imageUrl)}
+              src={getSpotifyCoverUrl(track.imageUrl)}
               alt={`Обложка альбома «${track.album}»`}
             />
           ) : (

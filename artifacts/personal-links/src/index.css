@@ -85,6 +85,13 @@
   to { transform: translateX(100%); }
 }
 
+@keyframes sign-wobble {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(5deg); }
+  45% { transform: rotate(-4deg); }
+  70% { transform: rotate(2.5deg); }
+}
+
 .page-shell {
   position: relative;
   min-height: 100dvh;
@@ -435,6 +442,12 @@
 }
 
 .platform-icon svg { width: 1.35rem; height: 1.35rem; }
+.platform-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
 .platform-name { display: block; font-size: 1.08rem; font-weight: 600; letter-spacing: -.035em; }
 .platform-handle { display: block; margin-top: .28rem; color: hsl(var(--muted-foreground)); font-family: var(--app-font-mono); font-size: .68rem; }
 
@@ -475,6 +488,40 @@
 .copy-button:hover { background: hsl(var(--foreground)); color: hsl(var(--card)); }
 .copy-button:active { transform: scale(.97); }
 .copy-button:disabled { cursor: wait; opacity: .55; }
+
+.road-sign-stage {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(4rem, 12vw, 8rem);
+  padding-bottom: 1rem;
+}
+
+.road-sign-button {
+  display: block;
+  width: clamp(9rem, 22vw, 13rem);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  filter: drop-shadow(0 18px 18px rgba(0, 0, 0, .35));
+  transform-origin: 50% 100%;
+  transition: transform .25s ease, filter .25s ease;
+}
+
+.road-sign-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.road-sign-button:hover {
+  filter: drop-shadow(0 23px 24px rgba(0, 0, 0, .45));
+  transform: translateY(-4px);
+}
+
+.road-sign-button--wobbling {
+  animation: sign-wobble .72s ease-in-out;
+}
 
 @media (max-width: 700px) {
   .page-shell {
