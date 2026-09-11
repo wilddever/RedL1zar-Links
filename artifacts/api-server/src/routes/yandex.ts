@@ -1,5 +1,9 @@
 import { Router, type IRouter } from "express";
-import { findYandexTrack, YANDEX_404_URL } from "../lib/yandex";
+import {
+  findYandexTrack,
+  getYandexSearchUrl,
+  YANDEX_404_URL,
+} from "../lib/yandex";
 
 const router: IRouter = Router();
 
@@ -17,7 +21,7 @@ router.get("/yandex/track", async (req, res) => {
   }
 
   const match = await findYandexTrack(title, artist, album);
-  res.json(match ?? { url: YANDEX_404_URL });
+  res.json(match ?? { url: getYandexSearchUrl(title, artist, album) });
 });
 
 export default router;

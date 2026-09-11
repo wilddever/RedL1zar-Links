@@ -1,5 +1,6 @@
 const YANDEX_SEARCH_URL = "https://api.music.yandex.net/search";
 const YANDEX_404_URL = "https://music.yandex.ru/404";
+const YANDEX_WEB_SEARCH_URL = "https://music.yandex.ru/search";
 
 type YandexArtist = {
   name?: string;
@@ -99,6 +100,17 @@ export async function findYandexTrack(
   } catch {
     return null;
   }
+}
+
+export function getYandexSearchUrl(
+  title: string,
+  artist: string,
+  album?: string,
+): string {
+  const text = [title, artist, album].filter(Boolean).join(" ").trim();
+  if (!text) return YANDEX_404_URL;
+
+  return `${YANDEX_WEB_SEARCH_URL}?text=${encodeURIComponent(text)}`;
 }
 
 export { YANDEX_404_URL };

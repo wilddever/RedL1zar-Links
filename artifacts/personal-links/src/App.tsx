@@ -546,7 +546,10 @@ function NowPlaying() {
       artist: track.artist,
       album: track.album,
     });
-    setYandexHref(YANDEX_404_URL);
+    const yandexSearchFallback = `https://music.yandex.ru/search?text=${encodeURIComponent(
+      [track.title, track.artist, track.album].filter(Boolean).join(' '),
+    )}`;
+    setYandexHref(yandexSearchFallback);
 
     fetch(`/api/yandex/track?${params.toString()}`, { cache: 'no-store' })
       .then(async (response) => {
@@ -557,7 +560,7 @@ function NowPlaying() {
         if (active && result?.url) setYandexHref(result.url);
       })
       .catch(() => {
-        if (active) setYandexHref(YANDEX_404_URL);
+        if (active) setYandexHref(yandexSearchFallback);
       });
 
     return () => {
