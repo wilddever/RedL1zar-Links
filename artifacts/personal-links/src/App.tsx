@@ -223,30 +223,30 @@ function Home() {
           <span className="mono-label" data-testid="text-footer">
             built for wandering / © RedL1zar
           </span>
-           <div className="footer-actions">
-             <button
-               className="copy-button"
-               data-testid="button-copy-handle"
-               onClick={copyHandle}
-               type="button"
-             >
-               {copied ? 'handle copied' : 'copy @RedL1zar'}
-             </button>
-              <div className="road-sign-stage">
-                <button
-                  aria-label="Покачать дорожный знак"
-                  className={`road-sign-button ${isSignWobbling ? 'road-sign-button--wobbling' : ''}`}
-                  onAnimationEnd={() => setIsSignWobbling(false)}
-                  onClick={() => {
-                    setIsSignWobbling(false);
-                    window.requestAnimationFrame(() => setIsSignWobbling(true));
-                  }}
-                  type="button"
-                >
-                  <img src={roadSign} alt="Дорожный знак с человеком за ноутбуком" />
-                </button>
-              </div>
-           </div>
+          <div className="road-sign-stage">
+            <button
+              aria-label="Покачать дорожный знак"
+              className={`road-sign-button ${isSignWobbling ? 'road-sign-button--wobbling' : ''}`}
+              onAnimationEnd={() => setIsSignWobbling(false)}
+              onClick={() => {
+                setIsSignWobbling(false);
+                window.requestAnimationFrame(() => setIsSignWobbling(true));
+              }}
+              type="button"
+            >
+              <img src={roadSign} alt="Дорожный знак с человеком за ноутбуком" />
+            </button>
+          </div>
+          <div className="footer-actions">
+            <button
+              className="copy-button"
+              data-testid="button-copy-handle"
+              onClick={copyHandle}
+              type="button"
+            >
+              {copied ? 'handle copied' : 'copy @RedL1zar'}
+            </button>
+          </div>
         </footer>
       </div>
     </main>
