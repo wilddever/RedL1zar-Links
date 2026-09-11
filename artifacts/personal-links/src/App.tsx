@@ -46,6 +46,25 @@ const platforms = [
   },
 ];
 
+const playlists = [
+  {
+    name: 'my main 4',
+    number: '04',
+    spotifyHref:
+      'https://open.spotify.com/playlist/3IX8KjGxQz4LXFEreDds4d?si=aca09cc518eb4031',
+    yandexHref:
+      'https://music.yandex.ru/playlists/6d52d453-eadd-62f5-be2c-c2ca05328bfc?utm_medium=copy_link&ref_id=6041e177-8841-4cd7-b871-0a768343d1af',
+  },
+  {
+    name: 'my main 5',
+    number: '05',
+    spotifyHref:
+      'https://open.spotify.com/playlist/294LgC3ikrANB7hVY6b3OM?si=3808989918d74ce1',
+    yandexHref:
+      'https://music.yandex.ru/playlists/685380f9-5d00-e4f0-b4ac-a2a4878c87f9?utm_medium=copy_link&ref_id=519b1691-d903-4e13-90d3-e64d47dee138',
+  },
+];
+
 const spotifyImageHosts = new Set([
   'i.scdn.co',
   'mosaic.scdn.co',
@@ -145,9 +164,37 @@ function ChaoticName() {
   );
 }
 
+type View = 'home' | 'playlists';
+
+function getViewFromLocation(): View {
+  return window.location.hash === '#playlists' ? 'playlists' : 'home';
+}
+
 function Home() {
   const [copied, setCopied] = useState(false);
   const [isSignWobbling, setIsSignWobbling] = useState(false);
+  const [activeView, setActiveView] = useState<View>(getViewFromLocation);
+
+  useEffect(() => {
+    const syncViewWithLocation = () => setActiveView(getViewFromLocation());
+
+    window.addEventListener('hashchange', syncViewWithLocation);
+    window.addEventListener('popstate', syncViewWithLocation);
+
+    return () => {
+      window.removeEventListener('hashchange', syncViewWithLocation);
+      window.removeEventListener('popstate', syncViewWithLocation);
+    };
+  }, []);
+
+  const navigateTo = (view: View) => {
+    const nextHash = view === 'playlists' ? '#playlists' : '#home';
+    if (window.location.hash !== nextHash) {
+      window.history.pushState({}, '', nextHash);
+    }
+    setActiveView(view);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const copyHandle = async () => {
     try {
@@ -173,51 +220,78 @@ function Home() {
           </div>
         </header>
 
-        <section className="hero" aria-labelledby="profile-title">
-          <div className="hero-copy">
-            <div className="eyebrow mono-label">personal frequency</div>
-            <h1 id="profile-title" data-testid="text-profile-name">
-              RedL1zar
-              <span>you found the signal.</span>
-            </h1>
-            <p className="hero-description" data-testid="text-welcome">
-              hello. my name is <ChaoticName />, aka redl1zar. its a small
-              corner of the internet for things i play, listen to, and send into
-              the void
-            </p>
-          </div>
-        </section>
+        <nav className="section-nav" aria-label="Site sections">
+          <button
+            aria-current={activeView === 'home' ? 'page' : undefined}
+            className={`section-nav__tab ${activeView === 'home' ? 'section-nav__tab--active' : ''}`}
+            data-testid="button-section-home"
+            onClick={() => navigateTo('home')}
+            type="button"
+          >
+            main
+          </button>
+          <button
+            aria-current={activeView === 'playlists' ? 'page' : undefined}
+            className={`section-nav__tab ${activeView === 'playlists' ? 'section-nav__tab--active' : ''}`}
+            data-testid="button-section-playlists"
+            onClick={() => navigateTo('playlists')}
+            type="button"
+          >
+            playlists
+          </button>
+        </nav>
 
-        <NowPlaying />
+        {activeView === 'home' ? (
+          <>
+            <section className="hero" aria-labelledby="profile-title">
+              <div className="hero-copy">
+                <div className="eyebrow mono-label">personal frequency</div>
+                <h1 id="profile-title" data-testid="text-profile-name">
+                  RedL1zar
+                  <span>you found the signal.</span>
+                </h1>
+                <p className="hero-description" data-testid="text-welcome">
+                  hello. my name is <ChaoticName />, aka redl1zar. its a small
+                  corner of the internet for things i play, listen to, and send into
+                  the void
+                </p>
+              </div>
+            </section>
 
-        <section className="links-section" aria-labelledby="links-title">
-          <div className="links-header">
-            <h2 id="links-title">Find me in other places</h2>
-            <span className="mono-label">05 channels</span>
-          </div>
-          <div className="link-list">
-            {platforms.map(({ name, handle, href, icon: Icon, logo }, index) => (
-              <a
-                className="platform-link"
-                data-testid={`link-platform-${name.toLowerCase()}`}
-                href={href}
-                key={name}
-                rel="noreferrer"
-                target="_blank"
-              >
-                <span className="platform-icon" aria-hidden="true">
-                  {logo ? <img src={logo} alt="" /> : <Icon />}
-                </span>
-                <span>
-                  <span className="platform-name">{name}</span>
-                  <span className="platform-handle">
-                    {String(index + 1).padStart(2, '0')} / {handle}
-                  </span>
-                </span>
-              </a>
-            ))}
-          </div>
-        </section>
+            <NowPlaying />
+
+            <section className="links-section" aria-labelledby="links-title">
+              <div className="links-header">
+                <h2 id="links-title">Find me in other places</h2>
+                <span className="mono-label">05 channels</span>
+              </div>
+              <div className="link-list">
+                {platforms.map(({ name, handle, href, icon: Icon, logo }, index) => (
+                  <a
+                    className="platform-link"
+                    data-testid={`link-platform-${name.toLowerCase()}`}
+                    href={href}
+                    key={name}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <span className="platform-icon" aria-hidden="true">
+                      {logo ? <img src={logo} alt="" /> : <Icon />}
+                    </span>
+                    <span>
+                      <span className="platform-name">{name}</span>
+                      <span className="platform-handle">
+                        {String(index + 1).padStart(2, '0')} / {handle}
+                      </span>
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          </>
+        ) : (
+          <PlaylistsView />
+        )}
 
         <footer className="footer-bar">
           <span className="mono-label" data-testid="text-footer">
@@ -250,6 +324,56 @@ function Home() {
         </footer>
       </div>
     </main>
+  );
+}
+
+function PlaylistsView() {
+  return (
+    <section className="playlists-section" aria-labelledby="playlists-title">
+      <div className="playlists-intro">
+        <div className="eyebrow mono-label">curated frequency</div>
+        <h1 id="playlists-title">my playlists</h1>
+        <p>
+          two places for the tracks that keep the signal moving.
+        </p>
+      </div>
+
+      <div className="playlist-list">
+        {playlists.map(({ name, number, spotifyHref, yandexHref }) => (
+          <article className={`playlist-card playlist-card--${number}`} key={name}>
+            <div className="playlist-card__index mono-label">{number} / collection</div>
+            <div className="playlist-card__body">
+              <div>
+                <span className="playlist-card__eyebrow mono-label">personal mix</span>
+                <h2>{name}</h2>
+              </div>
+              <div className="playlist-card__actions">
+                <a
+                  className="playlist-action playlist-action--spotify"
+                  href={spotifyHref}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <SiSpotify aria-hidden="true" />
+                  Spotify
+                  <ExternalLink aria-hidden="true" />
+                </a>
+                <a
+                  className="playlist-action playlist-action--yandex"
+                  href={yandexHref}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <span className="yandex-mark" aria-hidden="true">Я</span>
+                  Яндекс Музыка
+                  <ExternalLink aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
