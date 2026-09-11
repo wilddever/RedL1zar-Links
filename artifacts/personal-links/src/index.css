@@ -980,12 +980,33 @@
   .now-playing-header { align-items: flex-start; flex-direction: column; gap: .45rem; }
   .link-list { grid-template-columns: 1fr; }
   .platform-link { min-height: 86px; }
-  .footer-bar { display: flex; align-items: flex-start; flex-direction: column; padding-top: 2.5rem; }
-  .footer-actions { display: flex; width: 100%; justify-content: space-between; }
+  .footer-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "label label"
+      "actions sign";
+    align-items: start;
+    column-gap: .6rem;
+    row-gap: .85rem;
+    padding-top: 2.5rem;
+  }
+  .footer-bar > .mono-label { grid-area: label; }
+  .footer-actions {
+    display: flex;
+    grid-area: actions;
+    width: auto;
+    justify-content: flex-start;
+  }
   .copy-button { grid-column: auto; }
-  .road-sign-stage { order: 2; align-self: flex-end; }
-  .footer-actions { order: 3; }
-  .road-sign-stage { width: 1.85rem; }
+  .road-sign-stage {
+    grid-area: sign;
+    align-self: end;
+    justify-self: end;
+    width: 1.7rem;
+    margin-right: .35rem;
+    transform: translateY(1.25rem);
+  }
   .playlists-section { padding-top: 5rem; }
   .playlist-card { min-height: 200px; }
   .playlist-card__body { padding-top: 2rem; }
