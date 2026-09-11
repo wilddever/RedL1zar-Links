@@ -192,6 +192,36 @@ test("uses web search when the Yandex API returns malformed JSON", async () => {
   }
 });
 
+test("uses web search with the full title and artist when album is empty", async () => {
+  mock.method(
+    globalThis,
+    "fetch",
+    async () => new Response(null, { status: 451 }),
+  );
+
+  const title = `Rock & Roll "Live" / 夜の歌`;
+  const artist = `AC/DC & “Север”`;
+
+  const { server, url } = await startTestServer();
+  try {
+    const response = await requestTrack(url, {
+      title,
+      artist,
+      album: "",
+    });
+
+    assert.equal(response.status, 200);
+    const searchUrl = new URL(response.body.url ?? "");
+    assert.equal(searchUrl.origin + searchUrl.pathname, "https://music.yandex.ru/search");
+    assert.deepEqual([...searchUrl.searchParams.keys()], ["text"]);
+    assert.equal(searchUrl.searchParams.get("text"), `${title} ${artist}`);
+    assert.notEqual(response.body.url, "https://music.yandex.ru/404");
+  } finally {
+    await closeTestServer(server);
+    mock.restoreAll();
+  }
+});
+
 test("uses web search when the API returns no usable track", async () => {
   mock.method(
     globalThis,
