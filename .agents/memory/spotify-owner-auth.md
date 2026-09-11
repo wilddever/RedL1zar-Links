@@ -8,3 +8,9 @@ The Spotify owner token is an unlock credential, not a URL parameter. Accept it 
 **Why:** Putting the token in a query string leaks it through browser history, copied links, referrers, and request logs.
 
 **How to apply:** Keep the public now-playing endpoint credential-free, keep the owner session scoped to the Spotify routes, and do not add localStorage or URL-based token persistence.
+
+The Spotify redirect URI must use the same host where the owner starts authorization; keep separate development and production callback values.
+
+**Why:** The owner HttpOnly cookie is host-scoped, so a callback from a different Replit domain cannot prove that the owner started the flow.
+
+**How to apply:** Register both preview and published callback URLs in Spotify Developer Dashboard when both environments are used, and configure each environment with its matching URI.
