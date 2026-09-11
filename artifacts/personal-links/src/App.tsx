@@ -103,6 +103,7 @@ const previewTracks: SpotifyCurrentlyPlaying[] = [
 
 const chaosGlyphs =
   '∆∿⋮※⟟⧖⸮╳░▒▓⌁⌇⌗⌘⌬⌁⍉⎔⏣⨳⟡⧉⸸ꙮȝƛʭЖЖЖ';
+const chaosNameLength = 7;
 
 function getChaosGlyph() {
   return chaosGlyphs[Math.floor(Math.random() * chaosGlyphs.length)];
@@ -116,11 +117,11 @@ function getPreviewState(): SpotifyCurrentlyPlaying | null {
 
 function ChaoticName() {
   const [symbols, setSymbols] = useState(() =>
-    Array.from({ length: 7 }, getChaosGlyph),
+    Array.from({ length: chaosNameLength }, getChaosGlyph),
   );
 
   useEffect(() => {
-    const timers = symbols.map((_, index) =>
+    const timers = Array.from({ length: chaosNameLength }, (_, index) =>
       window.setInterval(() => {
         setSymbols((current) =>
           current.map((symbol, symbolIndex) =>
