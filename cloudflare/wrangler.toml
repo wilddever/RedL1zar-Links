@@ -7,6 +7,9 @@ directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 
+[vars]
+PUBLIC_APP_ORIGIN = "https://xn--d1ax3b.fun"
+
 [[kv_namespaces]]
 binding = "SPOTIFY_KV"
 id = "601e12ada8104731b002d35a5180f695"

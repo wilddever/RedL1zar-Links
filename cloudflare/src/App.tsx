@@ -4,6 +4,7 @@ import { SiPinterest, SiSpotify, SiSteam, SiTelegram } from 'react-icons/si';
 import {
   getCurrentSteamGame,
   getCurrentSpotifyTrack,
+  apiUrl,
   type SteamCurrentlyPlaying,
   type SpotifyCurrentlyPlaying,
 } from '@workspace/api-client-react';
@@ -84,7 +85,7 @@ function getSpotifyCoverUrl(imageUrl: string): string {
     if (url.protocol !== 'https:' || !spotifyImageHosts.has(url.hostname)) {
       return imageUrl;
     }
-    return `/api/spotify/cover?url=${encodeURIComponent(url.toString())}`;
+    return apiUrl(`/api/spotify/cover?url=${encodeURIComponent(url.toString())}`);
   } catch {
     return imageUrl;
   }
@@ -194,7 +195,7 @@ function SpotifyOwnerConnect() {
     setErrorMessage('');
 
     try {
-      const response = await fetch('/api/spotify/owner-auth-url', {
+      const response = await fetch(apiUrl('/api/spotify/owner-auth-url'), {
         method: 'POST',
         credentials: 'same-origin',
         cache: 'no-store',
@@ -653,7 +654,7 @@ function SendView() {
     setStatus('sending');
     setStatusMessage('');
     try {
-      const response = await fetch('/api/send', {
+      const response = await fetch(apiUrl('/api/send'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: trimmedMessage }),
@@ -797,7 +798,7 @@ function NowPlaying() {
     )}`;
     setYandexHref(yandexSearchFallback);
 
-    fetch(`/api/yandex/track?${params.toString()}`, { cache: 'no-store' })
+    fetch(apiUrl(`/api/yandex/track?${params.toString()}`), { cache: 'no-store' })
       .then(async (response) => {
         if (!response.ok) return null;
         return (await response.json()) as { url?: string };

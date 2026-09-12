@@ -27,6 +27,20 @@ export type SteamCurrentlyPlaying = {
   message: string;
 };
 
+const runtimeApiBaseUrl =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'xn--d1ax3b.fun' ||
+    window.location.hostname === 'рэд.fun')
+    ? 'https://api.xn--d1ax3b.fun'
+    : '';
+const apiBaseUrl = (
+  import.meta.env.VITE_API_BASE_URL ?? runtimeApiBaseUrl
+).replace(/\/+$/, '');
+
+export function apiUrl(path: string) {
+  return `${apiBaseUrl}${path}`;
+}
+
 async function getJson<T>(
   url: string,
   signal?: AbortSignal,
@@ -44,14 +58,14 @@ async function getJson<T>(
 
 export function getCurrentSpotifyTrack(options?: { signal?: AbortSignal }) {
   return getJson<SpotifyCurrentlyPlaying>(
-    '/api/spotify/currently-playing',
+    apiUrl('/api/spotify/currently-playing'),
     options?.signal,
   );
 }
 
 export function getCurrentSteamGame(options?: { signal?: AbortSignal }) {
   return getJson<SteamCurrentlyPlaying>(
-    '/api/steam/currently-playing',
+    apiUrl('/api/steam/currently-playing'),
     options?.signal,
   );
 }

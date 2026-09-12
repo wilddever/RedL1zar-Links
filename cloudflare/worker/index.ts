@@ -4,6 +4,7 @@ interface Env {
   SPOTIFY_CLIENT_ID?: string;
   SPOTIFY_CLIENT_SECRET?: string;
   SPOTIFY_REDIRECT_URI?: string;
+  PUBLIC_APP_ORIGIN?: string;
   SPOTIFY_OWNER_TOKEN?: string;
   SESSION_SECRET?: string;
   TELEGRAM_BOT_TOKEN?: string;
@@ -97,6 +98,41 @@ function redirect(location: string, cookies: string[] = []) {
   const headers = new Headers({ Location: location });
   for (const cookie of cookies) headers.append('Set-Cookie', cookie);
   return new Response(null, { status: 302, headers });
+}
+
+function getPublicAppOrigin(env: Env) {
+  return env.PUBLIC_APP_ORIGIN?.trim() || 'https://xn--d1ax3b.fun';
+}
+
+function redirectToApp(env: Env, path: string, cookies: string[] = []) {
+  return redirect(new URL(path, getPublicAppOrigin(env)).toString(), cookies);
+}
+
+function getCorsOrigin(request: Request, env: Env) {
+  const origin = request.headers.get('Origin');
+  if (!origin) return null;
+  const allowedOrigins = new Set([
+    getPublicAppOrigin(env),
+    'http://localhost:5173',
+    'http://localhost:8787',
+  ]);
+  return allowedOrigins.has(origin) ? origin : null;
+}
+
+function withCors(response: Response, request: Request, env: Env) {
+  const origin = getCorsOrigin(request, env);
+  if (!origin) return response;
+  const headers = new Headers(response.headers);
+  headers.set('Access-Control-Allow-Origin', origin);
+  headers.set('Access-Control-Allow-Credentials', 'true');
+  headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  headers.set('Access-Control-Allow-Headers', 'Content-Type, X-Spotify-Owner-Token');
+  headers.append('Vary', 'Origin');
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 async function fetchWithTimeout(
@@ -829,7 +865,7 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
   }
 
   if (url.pathname === '/api/spotify/owner-auth' && request.method === 'GET') {
-    return redirect('/?spotify=owner');
+    return redirectToApp(env, '/?spotify=owner');
   }
 
   if (url.pathname === '/api/spotify/owner-auth-url' && request.method === 'POST') {
@@ -870,10 +906,10 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
     }
     if (stateKey) await env.SPOTIFY_KV.delete(stateKey);
     if (url.searchParams.get('error')) {
-      return redirect('/?spotify=denied', [clearState]);
+      return redirectToApp(env, '/?spotify=denied', [clearState]);
     }
     const code = url.searchParams.get('code');
-    if (!code) return redirect('/?spotify=error', [clearState]);
+    if (!code) return redirectToApp(env, '/?spotify=error', [clearState]);
     try {
       const token = await requestSpotifyToken(
         new URLSearchParams({
@@ -895,7 +931,7 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
       }
       await storeSpotifyAccessToken(env, token.access_token, token.expires_in);
       await env.SPOTIFY_KV.delete('spotify:last_callback_status');
-      return redirect('/?spotify=connected', [clearState]);
+      return redirectToApp(env, '/?spotify=connected', [clearState]);
     } catch (error) {
       const callbackStatus =
         error instanceof SpotifyTokenUnauthorizedError
@@ -904,7 +940,7 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
       await env.SPOTIFY_KV.put('spotify:last_callback_status', callbackStatus, {
         expirationTtl: 24 * 60 * 60,
       });
-      return redirect('/?spotify=error', [clearState]);
+      return redirectToApp(env, '/?spotify=error', [clearState]);
     }
   }
 
@@ -1014,7 +1050,10 @@ export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
     if (url.pathname.startsWith('/api/')) {
-      return handleApi(request, env);
+      if (request.method === 'OPTIONS') {
+        return withCors(new Response(null, { status: 204 }), request, env);
+      }
+      return withCors(await handleApi(request, env), request, env);
     }
     return env.ASSETS.fetch(request);
   },
