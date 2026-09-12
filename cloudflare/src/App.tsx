@@ -183,12 +183,108 @@ function getViewFromLocation(): View {
   return 'home';
 }
 
+function SpotifyOwnerConnect() {
+  const [token, setToken] = useState('');
+  const [status, setStatus] = useState<'idle' | 'connecting' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const connectSpotify = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setStatus('connecting');
+    setErrorMessage('');
+
+    try {
+      const response = await fetch('/api/spotify/owner-session', {
+        method: 'POST',
+        credentials: 'include',
+        cache: 'no-store',
+        headers: {
+          'X-Spotify-Owner-Token': token,
+        },
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { message?: string }
+        | null;
+
+      if (!response.ok) {
+        throw new Error(result?.message || `Ошибка авторизации (${response.status})`);
+      }
+
+      setToken('');
+      window.location.assign('/api/spotify/auth');
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Не удалось создать owner-сессию.',
+      );
+    }
+  };
+
+  return (
+    <main className="page-shell">
+      <div className="content-frame">
+        <header className="topbar">
+          <div className="brand-mark">
+            <span className="brand-dot" aria-hidden="true" />
+            RL / SPOTIFY
+          </div>
+          <a className="owner-connect-back" href="/">
+            back
+          </a>
+        </header>
+
+        <section className="owner-connect-section" aria-labelledby="owner-connect-title">
+          <div className="eyebrow mono-label">private setup</div>
+          <h1 id="owner-connect-title">Connect Spotify</h1>
+          <p>
+            Эта страница нужна только для первого подключения Spotify. Токен
+            используется один раз для создания защищённой сессии владельца и не
+            сохраняется в браузере.
+          </p>
+
+          <form className="owner-connect-form" onSubmit={connectSpotify}>
+            <label className="owner-connect-field">
+              <span className="mono-label">owner token</span>
+              <input
+                autoComplete="off"
+                autoFocus
+                onChange={(event) => setToken(event.target.value)}
+                placeholder="Вставьте owner token"
+                required
+                type="password"
+                value={token}
+              />
+            </label>
+            <button
+              className="send-submit owner-connect-submit"
+              disabled={status === 'connecting' || !token.trim()}
+              type="submit"
+            >
+              {status === 'connecting' ? 'Проверяем…' : 'Подключить Spotify'}
+            </button>
+          </form>
+
+          {status === 'error' ? (
+            <p className="send-status send-status--error" role="alert">
+              {errorMessage}
+            </p>
+          ) : null}
+        </section>
+      </div>
+    </main>
+  );
+}
+
 function Home() {
   const [copied, setCopied] = useState(false);
   const [isSignWobbling, setIsSignWobbling] = useState(false);
   const [activeView, setActiveView] = useState<View>(getViewFromLocation);
   const [isSecretGameOpen, setIsSecretGameOpen] = useState(false);
   const signPressesRef = useRef(0);
+
+  if (new URLSearchParams(window.location.search).get('spotify') === 'owner') {
+    return <SpotifyOwnerConnect />;
+  }
 
   useEffect(() => {
     const syncViewWithLocation = () => setActiveView(getViewFromLocation());
