@@ -33,6 +33,7 @@ type Runtime = {
   obstacleTimer: number;
   horseTimer: number;
   groundOffset: number;
+  distance: number;
 };
 
 const COLORS = {
@@ -43,8 +44,9 @@ const COLORS = {
   red: '#ed554f',
   green: '#b9df57',
   grey: '#66645f',
-  forestFar: '#172b32',
-  forestNear: '#102126',
+  forestFar: '#1b3036',
+  forestMid: '#14272d',
+  forestNear: '#0d1c21',
   horse: '#c98b68',
   horseLight: '#e1ac7f',
   horseDark: '#6f473f',
@@ -63,6 +65,7 @@ function createRuntime(): Runtime {
     obstacleTimer: 1.1,
     horseTimer: 2.6,
     groundOffset: 0,
+    distance: 0,
   };
 }
 
@@ -147,25 +150,24 @@ function drawPixelSign(context: CanvasRenderingContext2D, x: number, bottom: num
   context.closePath();
   context.fill();
 
-  // Seated worker at a desk, matching the reference pictogram.
-  fillPixel(context, x + 24, top + 21, 9, 9, COLORS.ink);
-  fillPixel(context, x + 23, top + 30, 7, 19, COLORS.ink);
-  fillPixel(context, x + 17, top + 32, 5, 24, COLORS.ink);
-  fillPixel(context, x + 18, top + 51, 17, 5, COLORS.ink);
-  fillPixel(context, x + 29, top + 48, 6, 15, COLORS.ink);
-  fillPixel(context, x + 34, top + 60, 15, 4, COLORS.ink);
-  fillPixel(context, x + 34, top + 49, 5, 14, COLORS.ink);
-  fillPixel(context, x + 31, top + 37, 13, 5, COLORS.ink);
-  fillPixel(context, x + 40, top + 32, 12, 9, COLORS.ink);
-  fillPixel(context, x + 43, top + 41, 5, 4, COLORS.ink);
-  fillPixel(context, x + 49, top + 41, 4, 19, COLORS.ink);
-  fillPixel(context, x + 47, top + 59, 9, 4, COLORS.ink);
+  // Compact seated worker kept entirely inside the white triangle.
+  fillPixel(context, x + 26, top + 20, 7, 7, COLORS.ink);
+  fillPixel(context, x + 25, top + 27, 6, 15, COLORS.ink);
+  fillPixel(context, x + 19, top + 29, 4, 20, COLORS.ink);
+  fillPixel(context, x + 20, top + 44, 14, 4, COLORS.ink);
+  fillPixel(context, x + 30, top + 41, 5, 10, COLORS.ink);
+  fillPixel(context, x + 34, top + 48, 11, 3, COLORS.ink);
+  fillPixel(context, x + 32, top + 33, 10, 4, COLORS.ink);
+  fillPixel(context, x + 39, top + 28, 10, 8, COLORS.ink);
+  fillPixel(context, x + 42, top + 36, 4, 3, COLORS.ink);
+  fillPixel(context, x + 47, top + 36, 3, 15, COLORS.ink);
+  fillPixel(context, x + 45, top + 49, 8, 3, COLORS.ink);
 }
 
 function drawPixelHorse(context: CanvasRenderingContext2D, x: number, top: number) {
   const y = top;
 
-  // Large flying horse with folded legs and visible wings.
+  // Large horse hovering above the ground with folded legs.
   fillPixel(context, x + 23, y + 45, 94, 31, COLORS.horse);
   fillPixel(context, x + 31, y + 38, 71, 11, COLORS.horseLight);
   fillPixel(context, x + 93, y + 27, 28, 49, COLORS.horse);
@@ -180,13 +182,6 @@ function drawPixelHorse(context: CanvasRenderingContext2D, x: number, top: numbe
   fillPixel(context, x + 8, y + 52, 17, 8, COLORS.horseDark);
   fillPixel(context, x + 1, y + 46, 12, 8, COLORS.horseDark);
   fillPixel(context, x + 12, y + 40, 6, 15, COLORS.horseDark);
-
-  // Wings make the airborne state readable at a glance.
-  fillPixel(context, x + 46, y + 22, 46, 8, COLORS.horseLight);
-  fillPixel(context, x + 39, y + 14, 48, 8, COLORS.horseLight);
-  fillPixel(context, x + 49, y + 6, 29, 8, COLORS.horseLight);
-  fillPixel(context, x + 54, y + 30, 38, 7, COLORS.horseDark);
-  fillPixel(context, x + 59, y + 37, 24, 6, COLORS.horseDark);
 
   // Tucked legs and hooves leave a clear passage underneath.
   fillPixel(context, x + 38, y + 73, 25, 9, COLORS.horseDark);
@@ -203,69 +198,93 @@ function drawPixelPine(
   width: number,
   color: string,
 ) {
-  fillPixel(
-    context,
-    x + width / 2 - 5,
-    base - height * .42,
-    10,
-    height * .42,
-    color,
-  );
+  fillPixel(context, x + width / 2 - 5, base - height * .36, 10, height * .36, color);
 
   const tiers = [
-    { top: base - height, half: width * .12 },
-    { top: base - height * .78, half: width * .27 },
-    { top: base - height * .55, half: width * .42 },
-    { top: base - height * .3, half: width * .5 },
+    { top: base - height, bottom: base - height * .62, half: width * .2 },
+    { top: base - height * .8, bottom: base - height * .4, half: width * .32 },
+    { top: base - height * .59, bottom: base - height * .17, half: width * .43 },
+    { top: base - height * .39, bottom: base, half: width * .5 },
   ];
   context.fillStyle = color;
-  tiers.forEach(({ top, half }) => {
+  tiers.forEach(({ top, bottom, half }) => {
     context.beginPath();
     context.moveTo(x + width / 2, top);
-    context.lineTo(x + width / 2 - half, base - height * .18);
-    context.lineTo(x + width / 2 + half, base - height * .18);
+    context.lineTo(x + width / 2 - half, bottom);
+    context.lineTo(x + width / 2 + half, bottom);
     context.closePath();
     context.fill();
   });
 }
 
-function drawPixelForest(context: CanvasRenderingContext2D) {
-  context.fillStyle = COLORS.forestFar;
-  context.fillRect(0, GROUND_Y - 112, WORLD_WIDTH, 112);
-  [
-    [32, 150, 94],
-    [154, 105, 72],
-    [267, 142, 92],
-    [398, 112, 77],
-    [520, 160, 101],
-    [671, 119, 83],
-    [793, 150, 96],
-    [908, 112, 82],
-  ].forEach(([x, height, width]) => {
-    drawPixelPine(context, x, GROUND_Y - 20, height, width, COLORS.forestFar);
-  });
+function drawForestRow(
+  context: CanvasRenderingContext2D,
+  distance: number,
+  speedFactor: number,
+  spacing: number,
+  base: number,
+  heights: number[],
+  widthFactor: number,
+  color: string,
+) {
+  const cycleWidth = spacing * heights.length;
+  const offset = (distance * speedFactor) % cycleWidth;
+  for (
+    let cycleStart = -cycleWidth - offset;
+    cycleStart < WORLD_WIDTH + cycleWidth;
+    cycleStart += cycleWidth
+  ) {
+    heights.forEach((height, index) => {
+      drawPixelPine(
+        context,
+        cycleStart + index * spacing,
+        base,
+        height,
+        height * widthFactor,
+        color,
+      );
+    });
+  }
+}
 
-  context.fillStyle = COLORS.forestNear;
-  context.fillRect(0, GROUND_Y - 68, WORLD_WIDTH, 68);
-  [
-    [8, 92, 68],
-    [98, 134, 86],
-    [225, 100, 72],
-    [342, 145, 92],
-    [482, 106, 78],
-    [600, 137, 88],
-    [735, 101, 73],
-    [850, 143, 94],
-  ].forEach(([x, height, width]) => {
-    drawPixelPine(context, x, GROUND_Y + 2, height, width, COLORS.forestNear);
-  });
+function drawPixelForest(context: CanvasRenderingContext2D, distance: number) {
+  drawForestRow(
+    context,
+    distance,
+    .018,
+    112,
+    GROUND_Y - 52,
+    [105, 132, 94, 121, 112],
+    .58,
+    COLORS.forestFar,
+  );
+  drawForestRow(
+    context,
+    distance,
+    .038,
+    142,
+    GROUND_Y - 24,
+    [142, 111, 157, 126],
+    .62,
+    COLORS.forestMid,
+  );
+  drawForestRow(
+    context,
+    distance,
+    .07,
+    184,
+    GROUND_Y + 2,
+    [176, 145, 193, 158],
+    .66,
+    COLORS.forestNear,
+  );
 }
 
 function drawGameWorld(context: CanvasRenderingContext2D, runtime: Runtime) {
   context.fillStyle = COLORS.ink;
   context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-  drawPixelForest(context);
+  drawPixelForest(context, runtime.distance);
 
   // Sparse pixels keep the screen quiet while preserving the Chrome-game feel.
   fillPixel(context, 96, 104, 4, 4, COLORS.grey);
@@ -336,6 +355,7 @@ function boxesOverlap(
 function updateRuntime(runtime: Runtime, delta: number): boolean {
   runtime.score += delta * 10;
   runtime.speed = Math.min(560, 330 + runtime.score * 1.4);
+  runtime.distance += runtime.speed * delta;
   runtime.groundOffset =
     (runtime.groundOffset + runtime.speed * delta) % 64;
 
