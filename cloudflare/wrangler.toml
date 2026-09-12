@@ -9,4 +9,4 @@ not_found_handling = "single-page-application"
 
 [[kv_namespaces]]
 binding = "SPOTIFY_KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "601e12ada8104731b002d35a5180f695"
