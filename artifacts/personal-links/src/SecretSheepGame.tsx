@@ -381,7 +381,7 @@ function drawGameWorld(
     SHEEP_X,
     runtime.sheep.bottom,
     runtime.sheep.ducking,
-    performance.now(),
+    time,
   );
 
   runtime.obstacles.forEach((obstacle) => {
