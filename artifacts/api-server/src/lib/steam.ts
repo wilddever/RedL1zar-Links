@@ -9,6 +9,7 @@ type SteamGame = {
 };
 
 let lastConfirmedGame: SteamGame | null = null;
+let latestRequestId = 0;
 
 export type SteamCurrentlyPlaying = {
   status: "playing" | "not_playing" | "unavailable";
@@ -82,6 +83,21 @@ function createGame(name: string, source: string): SteamGame {
   return { name, appId, steamUrl, imageUrl };
 }
 
+function commitState(
+  requestId: number,
+  state: SteamCurrentlyPlaying,
+): SteamCurrentlyPlaying {
+  if (requestId !== latestRequestId) return state;
+
+  if (state.status === "playing") {
+    lastConfirmedGame = state.game;
+  } else if (state.status === "not_playing") {
+    lastConfirmedGame = null;
+  }
+
+  return state;
+}
+
 function unavailableState(): SteamCurrentlyPlaying {
   return {
     status: "unavailable",
@@ -91,6 +107,7 @@ function unavailableState(): SteamCurrentlyPlaying {
 }
 
 export async function getCurrentSteamState(): Promise<SteamCurrentlyPlaying> {
+  const requestId = ++latestRequestId;
   let xml = "";
   let xmlAvailable = false;
   try {
@@ -117,12 +134,11 @@ export async function getCurrentSteamState(): Promise<SteamCurrentlyPlaying> {
     const name = extractTag(currentGame, "gameName");
     if (name) {
       const game = createGame(name, currentGame);
-      lastConfirmedGame = game;
-      return {
+      return commitState(requestId, {
         status: "playing",
         game,
         message: "Сейчас играет в Steam",
-      };
+      });
     }
   }
 
@@ -142,12 +158,11 @@ export async function getCurrentSteamState(): Promise<SteamCurrentlyPlaying> {
         const name = extractHtmlGameName(html);
         if (name) {
           const game = createGame(name, findMostPlayedGameXml(xml, name));
-          lastConfirmedGame = game;
-          return {
+          return commitState(requestId, {
             status: "playing",
             game,
             message: "Сейчас играет в Steam",
-          };
+          });
         }
       }
     }
@@ -155,11 +170,13 @@ export async function getCurrentSteamState(): Promise<SteamCurrentlyPlaying> {
     // Fall through to a stable status below.
   }
 
-  if (!xmlAvailable || !htmlAvailable) return unavailableState();
-  lastConfirmedGame = null;
-  return {
+  if (!xmlAvailable || !htmlAvailable) {
+    return unavailableState();
+  }
+
+  return commitState(requestId, {
     status: "not_playing",
     game: null,
     message: "В Steam ничего не запущено",
-  };
+  });
 }

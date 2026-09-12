@@ -303,3 +303,83 @@ test("does not infer not_playing from incomplete successful Steam responses", as
     mock.restoreAll();
   }
 });
+
+test("does not let an older delayed check overwrite a newer confirmed state", async () => {
+  let releaseOlderHtml!: (response: Response) => void;
+  const olderHtml = new Promise<Response>((resolve) => {
+    releaseOlderHtml = resolve;
+  });
+  let xmlRequestNumber = 0;
+  let htmlRequestNumber = 0;
+  mock.method(
+    globalThis,
+    "fetch",
+    async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.includes("?xml=1")) {
+        xmlRequestNumber += 1;
+        if (xmlRequestNumber === 1) {
+          return new Response("<profile><mostPlayedGames /></profile>", {
+            status: 200,
+          });
+        }
+        if (xmlRequestNumber === 2) {
+          return new Response(
+            `<profile>
+              <currentGame>
+                <gameName>Slay the Spire</gameName>
+              </currentGame>
+            </profile>`,
+            { status: 200 },
+          );
+        }
+        throw new Error("Steam XML unavailable");
+      }
+
+      htmlRequestNumber += 1;
+      if (htmlRequestNumber === 1) return olderHtml;
+      throw new Error("Steam HTML unavailable");
+    },
+  );
+
+  try {
+    const olderCheck = getCurrentSteamState();
+    const newerCheck = getCurrentSteamState();
+
+    assert.deepEqual(await newerCheck, {
+      status: "playing",
+      game: {
+        name: "Slay the Spire",
+        appId: null,
+        steamUrl: "https://store.steampowered.com/search/?term=Slay%20the%20Spire",
+        imageUrl: null,
+      },
+      message: "Сейчас играет в Steam",
+    });
+
+    releaseOlderHtml(
+      new Response('<div class="profile_summary"><span>Offline</span></div>', {
+        status: 200,
+      }),
+    );
+    assert.deepEqual(await olderCheck, {
+      status: "not_playing",
+      game: null,
+      message: "В Steam ничего не запущено",
+    });
+
+    assert.deepEqual(await getCurrentSteamState(), {
+      status: "unavailable",
+      game: {
+        name: "Slay the Spire",
+        appId: null,
+        steamUrl: "https://store.steampowered.com/search/?term=Slay%20the%20Spire",
+        imageUrl: null,
+      },
+      message: "Steam временно недоступен",
+    });
+  } finally {
+    mock.restoreAll();
+  }
+});
