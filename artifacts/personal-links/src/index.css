@@ -1062,6 +1062,137 @@
   animation: sign-wobble .72s ease-in-out;
 }
 
+.secret-sheep-game {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  box-sizing: border-box;
+  min-width: 320px;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  padding: 1rem;
+  color: hsl(var(--foreground));
+  background: #000;
+  font-family: var(--app-font-mono);
+  user-select: none;
+}
+
+.secret-sheep-game__topline {
+  display: flex;
+  width: min(100%, 960px);
+  justify-content: space-between;
+  color: hsl(var(--muted-foreground));
+  font-size: .66rem;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.secret-sheep-game__stage {
+  position: relative;
+  width: min(100%, 960px);
+  margin: auto 0 0;
+}
+
+.secret-sheep-game__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  image-rendering: pixelated;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.secret-sheep-game__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 1rem;
+  text-align: center;
+  background: rgba(0, 0, 0, .72);
+}
+
+.secret-sheep-game__eyebrow {
+  color: hsl(var(--primary));
+  font-size: .64rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.secret-sheep-game h1 {
+  margin: .75rem 0 .35rem;
+  color: hsl(var(--foreground));
+  font-family: var(--app-font-sans);
+  font-size: clamp(2.8rem, 8vw, 6.5rem);
+  font-weight: 700;
+  letter-spacing: -.1em;
+  line-height: .85;
+  text-transform: lowercase;
+}
+
+.secret-sheep-game__overlay p {
+  margin: 0 0 1.35rem;
+  color: hsl(var(--muted-foreground));
+  font-size: .75rem;
+  letter-spacing: .06em;
+}
+
+.secret-sheep-game__overlay button,
+.secret-sheep-game__controls button {
+  padding: .72rem .95rem;
+  color: hsl(var(--background));
+  font: inherit;
+  font-size: .64rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border: 1px solid hsl(var(--secondary));
+  border-radius: 999px;
+  background: hsl(var(--secondary));
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.secret-sheep-game__overlay button:hover,
+.secret-sheep-game__controls button:hover {
+  filter: brightness(1.1);
+}
+
+.secret-sheep-game__overlay button:focus-visible,
+.secret-sheep-game__controls button:focus-visible {
+  outline: 3px solid hsl(var(--primary));
+  outline-offset: 3px;
+}
+
+.secret-sheep-game__controls {
+  display: flex;
+  gap: .55rem;
+  margin-top: 1rem;
+}
+
+.secret-sheep-game__controls button {
+  color: hsl(var(--foreground));
+  border-color: hsla(210, 25%, 96%, .25);
+  background: hsla(210, 25%, 96%, .08);
+}
+
+.secret-sheep-game__help {
+  margin: .8rem 0 0;
+  color: hsl(var(--muted-foreground));
+  font-size: .6rem;
+  letter-spacing: .08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.secret-sheep-game__help span {
+  color: hsl(var(--primary));
+}
+
 @media (max-width: 700px) {
   .page-shell {
     background-image:
@@ -1122,6 +1253,32 @@
   .send-section { padding-top: 5rem; }
   .send-form__footer { align-items: flex-start; flex-direction: column; }
   .send-submit { width: 100%; }
+
+  .secret-sheep-game {
+    padding: .8rem;
+  }
+
+  .secret-sheep-game__topline {
+    font-size: .56rem;
+  }
+
+  .secret-sheep-game__stage {
+    width: 100%;
+    margin-top: auto;
+  }
+
+  .secret-sheep-game__controls {
+    width: 100%;
+  }
+
+  .secret-sheep-game__controls button {
+    flex: 1;
+  }
+
+  .secret-sheep-game__help {
+    margin-bottom: .2rem;
+    font-size: .52rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

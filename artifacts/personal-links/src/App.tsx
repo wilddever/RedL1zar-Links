@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { SiPinterest, SiSpotify, SiSteam, SiTelegram } from 'react-icons/si';
 import {
@@ -10,6 +10,7 @@ import {
 import rztLogo from '../../../attached_assets/photo_2026-01-18_13-43-45_1789144600817.jpg';
 import roadSign from '../../../attached_assets/Picsart_26-09-11_21-29-09-376_1789144606943.png';
 import yandexMusicLogo from '../../../attached_assets/изображение_1789152023645.png';
+import SecretSheepGame from './SecretSheepGame';
 
 const platforms = [
   {
@@ -185,6 +186,8 @@ function Home() {
   const [copied, setCopied] = useState(false);
   const [isSignWobbling, setIsSignWobbling] = useState(false);
   const [activeView, setActiveView] = useState<View>(getViewFromLocation);
+  const [isSecretGameOpen, setIsSecretGameOpen] = useState(false);
+  const signPressesRef = useRef(0);
 
   useEffect(() => {
     const syncViewWithLocation = () => setActiveView(getViewFromLocation());
@@ -217,6 +220,20 @@ function Home() {
       setCopied(false);
     }
   };
+
+  const handleRoadSignClick = () => {
+    setIsSignWobbling(false);
+    window.requestAnimationFrame(() => setIsSignWobbling(true));
+
+    signPressesRef.current += 1;
+    if (signPressesRef.current < 5) return;
+
+    signPressesRef.current = 0;
+    window.history.replaceState({}, '', '#home');
+    setIsSecretGameOpen(true);
+  };
+
+  if (isSecretGameOpen) return <SecretSheepGame />;
 
   return (
     <main className="page-shell">
@@ -334,10 +351,7 @@ function Home() {
               aria-label="Покачать дорожный знак"
               className={`road-sign-button ${isSignWobbling ? 'road-sign-button--wobbling' : ''}`}
               onAnimationEnd={() => setIsSignWobbling(false)}
-              onClick={() => {
-                setIsSignWobbling(false);
-                window.requestAnimationFrame(() => setIsSignWobbling(true));
-              }}
+              onClick={handleRoadSignClick}
               type="button"
             >
               <img
