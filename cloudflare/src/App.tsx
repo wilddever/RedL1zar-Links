@@ -282,10 +282,6 @@ function Home() {
   const [isSecretGameOpen, setIsSecretGameOpen] = useState(false);
   const signPressesRef = useRef(0);
 
-  if (new URLSearchParams(window.location.search).get('spotify') === 'owner') {
-    return <SpotifyOwnerConnect />;
-  }
-
   useEffect(() => {
     const syncViewWithLocation = () => setActiveView(getViewFromLocation());
 
@@ -297,6 +293,10 @@ function Home() {
       window.removeEventListener('popstate', syncViewWithLocation);
     };
   }, []);
+
+  if (new URLSearchParams(window.location.search).get('spotify') === 'owner') {
+    return <SpotifyOwnerConnect />;
+  }
 
   const navigateTo = (view: View) => {
     const nextHash =
