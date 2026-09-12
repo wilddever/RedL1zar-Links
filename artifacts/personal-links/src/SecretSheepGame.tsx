@@ -159,18 +159,15 @@ function drawPixelSign(context: CanvasRenderingContext2D, x: number, bottom: num
   context.closePath();
   context.clip();
 
-  // Compact seated worker matching the sign on the main page.
-  fillPixel(context, x + 27, top + 19, 6, 6, COLORS.ink);
-  fillPixel(context, x + 26, top + 25, 6, 15, COLORS.ink);
-  fillPixel(context, x + 22, top + 29, 4, 16, COLORS.ink);
-  fillPixel(context, x + 23, top + 42, 13, 4, COLORS.ink);
-  fillPixel(context, x + 31, top + 39, 5, 10, COLORS.ink);
-  fillPixel(context, x + 35, top + 47, 10, 3, COLORS.ink);
-  fillPixel(context, x + 33, top + 31, 10, 4, COLORS.ink);
-  fillPixel(context, x + 40, top + 26, 9, 8, COLORS.ink);
-  fillPixel(context, x + 43, top + 34, 4, 3, COLORS.ink);
-  fillPixel(context, x + 47, top + 34, 3, 15, COLORS.ink);
-  fillPixel(context, x + 45, top + 47, 8, 3, COLORS.ink);
+  // Small, simple seated worker matching the sign on the main page.
+  fillPixel(context, x + 30, top + 18, 4, 4, COLORS.ink);
+  fillPixel(context, x + 29, top + 22, 5, 9, COLORS.ink);
+  fillPixel(context, x + 26, top + 25, 3, 12, COLORS.ink);
+  fillPixel(context, x + 27, top + 32, 10, 3, COLORS.ink);
+  fillPixel(context, x + 34, top + 34, 3, 8, COLORS.ink);
+  fillPixel(context, x + 35, top + 24, 6, 5, COLORS.ink);
+  fillPixel(context, x + 37, top + 29, 2, 5, COLORS.ink);
+  fillPixel(context, x + 33, top + 33, 10, 3, COLORS.ink);
   context.restore();
 }
 
@@ -257,6 +254,53 @@ function drawForestRow(
   }
 }
 
+type Star = {
+  x: number;
+  y: number;
+  size: number;
+  speed: number;
+  phase: number;
+};
+
+const STAR_FIELD: Star[] = [
+  { x: 38, y: 58, size: 2, speed: 0.008, phase: 0.2 },
+  { x: 104, y: 142, size: 3, speed: 0.012, phase: 1.7 },
+  { x: 176, y: 86, size: 2, speed: 0.015, phase: 2.3 },
+  { x: 244, y: 48, size: 2, speed: 0.006, phase: 3.4 },
+  { x: 318, y: 132, size: 2, speed: 0.01, phase: 4.1 },
+  { x: 392, y: 76, size: 3, speed: 0.017, phase: 1.1 },
+  { x: 458, y: 174, size: 2, speed: 0.009, phase: 5.2 },
+  { x: 526, y: 42, size: 2, speed: 0.013, phase: 2.8 },
+  { x: 598, y: 112, size: 2, speed: 0.007, phase: 0.9 },
+  { x: 666, y: 64, size: 3, speed: 0.016, phase: 4.7 },
+  { x: 734, y: 154, size: 2, speed: 0.011, phase: 3.1 },
+  { x: 806, y: 92, size: 2, speed: 0.006, phase: 5.7 },
+  { x: 884, y: 44, size: 2, speed: 0.014, phase: 1.9 },
+  { x: 932, y: 182, size: 3, speed: 0.009, phase: 0.4 },
+  { x: 72, y: 224, size: 2, speed: 0.005, phase: 4.4 },
+  { x: 284, y: 204, size: 2, speed: 0.012, phase: 2.1 },
+  { x: 552, y: 232, size: 2, speed: 0.008, phase: 5.1 },
+  { x: 844, y: 218, size: 2, speed: 0.015, phase: 3.8 },
+];
+
+function drawPixelStars(context: CanvasRenderingContext2D, time: number) {
+  const cycleWidth = WORLD_WIDTH + 18;
+  STAR_FIELD.forEach(({ x: baseX, y: baseY, size, speed, phase }) => {
+    const x = ((baseX - time * speed) % cycleWidth + cycleWidth) % cycleWidth - 9;
+    const y = baseY + Math.sin(time * 0.0012 + phase) * 2;
+    const shimmer = 0.45 + (Math.sin(time * 0.002 + phase) + 1) * 0.25;
+
+    context.save();
+    context.globalAlpha = shimmer;
+    fillPixel(context, x, y, size, size, COLORS.cream);
+    if (size === 3) {
+      fillPixel(context, x + 1, y - 3, 1, 9, COLORS.cream);
+      fillPixel(context, x - 2, y + 1, 7, 1, COLORS.cream);
+    }
+    context.restore();
+  });
+}
+
 function drawPixelForest(context: CanvasRenderingContext2D, distance: number) {
   drawForestRow(
     context,
@@ -290,17 +334,16 @@ function drawPixelForest(context: CanvasRenderingContext2D, distance: number) {
   );
 }
 
-function drawGameWorld(context: CanvasRenderingContext2D, runtime: Runtime) {
+function drawGameWorld(
+  context: CanvasRenderingContext2D,
+  runtime: Runtime,
+  time: number,
+) {
   context.fillStyle = COLORS.ink;
   context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
+  drawPixelStars(context, time);
   drawPixelForest(context, runtime.distance);
-
-  // Sparse pixels keep the screen quiet while preserving the Chrome-game feel.
-  fillPixel(context, 96, 104, 4, 4, COLORS.grey);
-  fillPixel(context, 302, 82, 4, 4, COLORS.grey);
-  fillPixel(context, 740, 128, 4, 4, COLORS.grey);
-  fillPixel(context, 848, 72, 4, 4, COLORS.grey);
 
   context.strokeStyle = COLORS.grey;
   context.lineWidth = 3;
@@ -494,7 +537,7 @@ export default function SecretSheepGame() {
         }
       }
 
-      drawGameWorld(context, runtime);
+      drawGameWorld(context, runtime, time);
       animationFrame = window.requestAnimationFrame(frame);
     };
 
