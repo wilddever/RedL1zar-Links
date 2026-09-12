@@ -438,6 +438,110 @@
   outline-offset: 3px;
 }
 
+.birthday-section {
+  max-width: 920px;
+  padding: clamp(6rem, 16vh, 10rem) 0 5rem;
+  animation: rise-in .8s .08s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.birthday-intro { max-width: 700px; }
+
+.birthday-intro h1 {
+  margin: 0;
+  color: hsl(var(--foreground));
+  font-size: clamp(4rem, 11vw, 9rem);
+  font-weight: 700;
+  letter-spacing: -.1em;
+  line-height: .84;
+  text-transform: lowercase;
+}
+
+.birthday-intro p {
+  max-width: 430px;
+  margin: 1.7rem 0 0;
+  color: hsl(var(--muted-foreground));
+  font-size: clamp(1rem, 1.7vw, 1.18rem);
+  line-height: 1.55;
+}
+
+.birthday-countdown {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .75rem;
+  margin-top: 4rem;
+}
+
+.birthday-countdown__unit {
+  display: flex;
+  min-height: 140px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+  border: 1px solid hsla(210, 25%, 96%, .22);
+  border-radius: 1.05rem;
+  background: hsla(213, 29%, 13%, .58);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+
+.birthday-countdown__unit strong {
+  color: hsl(var(--foreground));
+  font-family: var(--app-font-sans);
+  font-size: clamp(2.7rem, 7vw, 5.8rem);
+  font-weight: 700;
+  letter-spacing: -.09em;
+  line-height: .8;
+}
+
+.birthday-countdown__unit span {
+  color: hsl(var(--primary));
+  font-family: var(--app-font-mono);
+  font-size: .64rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.birthday-calendar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  margin-top: 1.5rem;
+  padding: .75rem .95rem;
+  color: hsl(var(--background));
+  font-family: var(--app-font-mono);
+  font-size: .64rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  border: 1px solid hsl(var(--secondary));
+  border-radius: 999px;
+  background: hsl(var(--secondary));
+  cursor: pointer;
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.birthday-calendar-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.birthday-calendar-button:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+
+.birthday-calendar-button:active { transform: scale(.98); }
+
+.birthday-calendar-button:focus-visible {
+  outline: 3px solid hsl(var(--primary));
+  outline-offset: 3px;
+}
+
+.birthday-note {
+  margin: .8rem 0 0;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--app-font-mono);
+  font-size: .61rem;
+}
+
 .yandex-mark {
   display: inline-grid;
   width: .92rem;
@@ -1239,6 +1343,13 @@
   .playlist-card__body { padding-top: 2rem; }
   .playlist-card__actions { flex-direction: column; align-items: stretch; }
   .playlist-action { justify-content: space-between; }
+  .birthday-section { padding-top: 5rem; }
+  .birthday-countdown {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 3rem;
+  }
+  .birthday-countdown__unit { min-height: 112px; }
+  .birthday-note { line-height: 1.45; }
   .send-section { padding-top: 5rem; }
   .send-form__footer { align-items: flex-start; flex-direction: column; }
   .send-submit { width: 100%; }
