@@ -184,42 +184,6 @@ function getViewFromLocation(): View {
 }
 
 function SpotifyOwnerConnect() {
-  const [token, setToken] = useState('');
-  const [status, setStatus] = useState<'idle' | 'connecting' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const connectSpotify = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setStatus('connecting');
-    setErrorMessage('');
-
-    try {
-      const response = await fetch('/api/spotify/owner-session', {
-        method: 'POST',
-        credentials: 'include',
-        cache: 'no-store',
-        headers: {
-          'X-Spotify-Owner-Token': token,
-        },
-      });
-      const result = (await response.json().catch(() => null)) as
-        | { message?: string }
-        | null;
-
-      if (!response.ok) {
-        throw new Error(result?.message || `Ошибка авторизации (${response.status})`);
-      }
-
-      setToken('');
-      window.location.assign('/api/spotify/auth');
-    } catch (error) {
-      setStatus('error');
-      setErrorMessage(
-        error instanceof Error ? error.message : 'Не удалось создать owner-сессию.',
-      );
-    }
-  };
-
   return (
     <main className="page-shell">
       <div className="content-frame">
@@ -242,33 +206,29 @@ function SpotifyOwnerConnect() {
             сохраняется в браузере.
           </p>
 
-          <form className="owner-connect-form" onSubmit={connectSpotify}>
+          <form
+            action="/api/spotify/owner-auth"
+            className="owner-connect-form"
+            method="post"
+          >
             <label className="owner-connect-field">
               <span className="mono-label">owner token</span>
               <input
                 autoComplete="off"
                 autoFocus
-                onChange={(event) => setToken(event.target.value)}
+                name="ownerToken"
                 placeholder="Вставьте owner token"
                 required
                 type="password"
-                value={token}
               />
             </label>
             <button
               className="send-submit owner-connect-submit"
-              disabled={status === 'connecting' || !token.trim()}
               type="submit"
             >
-              {status === 'connecting' ? 'Проверяем…' : 'Подключить Spotify'}
+              Подключить Spotify
             </button>
           </form>
-
-          {status === 'error' ? (
-            <p className="send-status send-status--error" role="alert">
-              {errorMessage}
-            </p>
-          ) : null}
         </section>
       </div>
     </main>

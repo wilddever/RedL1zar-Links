@@ -234,7 +234,11 @@ async function isOwnerSession(
   );
 }
 
-async function authorizeOwner(request: Request, env: Env) {
+async function authorizeOwner(
+  request: Request,
+  env: Env,
+  providedTokenOverride?: string | null,
+) {
   const config = getConfig(env);
   if (!config?.ownerToken) return { ok: false, cookie: null };
   if (
@@ -247,7 +251,10 @@ async function authorizeOwner(request: Request, env: Env) {
     return { ok: true, cookie: null };
   }
 
-  const providedToken = request.headers.get('x-spotify-owner-token');
+  const providedToken =
+    providedTokenOverride === undefined
+      ? request.headers.get('x-spotify-owner-token')
+      : providedTokenOverride;
   if (!equalSecret(providedToken, config.ownerToken)) {
     return { ok: false, cookie: null };
   }
@@ -261,6 +268,35 @@ async function authorizeOwner(request: Request, env: Env) {
       30 * 24 * 60 * 60 * 1000,
     ),
   };
+}
+
+async function createSpotifyAuthorizationResponse(
+  request: Request,
+  env: Env,
+  providedToken?: string | null,
+) {
+  const owner = await authorizeOwner(request, env, providedToken);
+  if (!owner.ok) {
+    return text('Spotify authorization is restricted to the page owner.', 403);
+  }
+
+  const config = getConfig(env);
+  if (!config) return noStore({ status: 'not_configured' }, 503);
+
+  const state = await createState(config.sessionSecret);
+  const params = new URLSearchParams({
+    client_id: config.clientId,
+    response_type: 'code',
+    redirect_uri: config.redirectUri,
+    state,
+    scope: SPOTIFY_SCOPE,
+    show_dialog: 'true',
+  });
+
+  return redirect(`${SPOTIFY_AUTHORIZE_URL}?${params}`, [
+    makeCookie(request, 'spotify_oauth_state', state, 10 * 60 * 1000),
+    ...(owner.cookie ? [owner.cookie] : []),
+  ]);
 }
 
 function getAllowedSpotifyImageUrl(rawUrl: string) {
@@ -697,26 +733,17 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
     return response;
   }
 
-  if (url.pathname === '/api/spotify/auth' && request.method === 'GET') {
-    const owner = await authorizeOwner(request, env);
-    if (!owner.ok) {
-      return text('Spotify authorization is restricted to the page owner.', 403);
+  if (url.pathname === '/api/spotify/owner-auth' && request.method === 'POST') {
+    const formData = await request.formData().catch(() => null);
+    const providedToken = formData?.get('ownerToken');
+    if (typeof providedToken !== 'string' || !providedToken.trim()) {
+      return text('Owner token is required.', 400);
     }
-    const config = getConfig(env);
-    if (!config) return noStore({ status: 'not_configured' }, 503);
-    const state = await createState(config.sessionSecret);
-    const params = new URLSearchParams({
-      client_id: config.clientId,
-      response_type: 'code',
-      redirect_uri: config.redirectUri,
-      state,
-      scope: SPOTIFY_SCOPE,
-      show_dialog: 'true',
-    });
-    return redirect(`${SPOTIFY_AUTHORIZE_URL}?${params}`, [
-      makeCookie(request, 'spotify_oauth_state', state, 10 * 60 * 1000),
-      ...(owner.cookie ? [owner.cookie] : []),
-    ]);
+    return createSpotifyAuthorizationResponse(request, env, providedToken);
+  }
+
+  if (url.pathname === '/api/spotify/auth' && request.method === 'GET') {
+    return createSpotifyAuthorizationResponse(request, env);
   }
 
   if (url.pathname === '/api/spotify/callback' && request.method === 'GET') {

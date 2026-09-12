@@ -103,20 +103,17 @@ Cloudflare сам настроит маршрут Worker и TLS-сертифик
 Refresh token из PostgreSQL Replit автоматически в Cloudflare KV не переносится.
 После публикации нужно выполнить OAuth-подключение один раз.
 
-Откройте сам сайт, откройте DevTools → Console и выполните код ниже. Он создаёт
-HttpOnly-сессию владельца и не помещает owner token в URL:
+Откройте специальную страницу подключения. Она отправляет owner token обычным
+POST-запросом по HTTPS, создаёт HttpOnly-сессию владельца и не помещает token
+в URL:
 
-```js
-const token = prompt('Spotify owner token');
-await fetch('/api/spotify/owner-session', {
-  method: 'POST',
-  headers: { 'X-Spotify-Owner-Token': token },
-});
-location.href = '/api/spotify/auth';
+```text
+https://YOUR-DOMAIN.example/?spotify=owner
 ```
 
-После разрешения Spotify вернёт на сайт и сохранит refresh token в KV. Сам
-owner token не вставляйте в адресную строку и не отправляйте в чат.
+Введите token в форме и нажмите кнопку. После разрешения Spotify вернёт на сайт
+и сохранит refresh token в KV. Сам owner token не вставляйте в адресную строку
+и не отправляйте в чат.
 
 ## 7. Быстрая проверка
 
