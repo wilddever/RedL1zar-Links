@@ -1076,7 +1076,9 @@
   color: hsl(var(--foreground));
   background: #000;
   font-family: var(--app-font-mono);
+  touch-action: none;
   user-select: none;
+  overscroll-behavior: none;
 }
 
 .secret-sheep-game__topline {
@@ -1112,6 +1114,7 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  gap: .8rem;
   padding: 1rem;
   text-align: center;
   background: rgba(0, 0, 0, .72);
@@ -1125,21 +1128,25 @@
 }
 
 .secret-sheep-game h1 {
-  margin: .75rem 0 .35rem;
+  max-width: 100%;
+  margin: 0;
   color: hsl(var(--foreground));
   font-family: var(--app-font-sans);
-  font-size: clamp(2.8rem, 8vw, 6.5rem);
+  font-size: clamp(2.4rem, 8vw, 6.5rem);
   font-weight: 700;
   letter-spacing: -.1em;
   line-height: .85;
   text-transform: lowercase;
+  overflow-wrap: anywhere;
 }
 
 .secret-sheep-game__overlay p {
-  margin: 0 0 1.35rem;
+  max-width: 100%;
+  margin: 0;
   color: hsl(var(--muted-foreground));
   font-size: .75rem;
   letter-spacing: .06em;
+  line-height: 1.4;
 }
 
 .secret-sheep-game__overlay button,
@@ -1166,31 +1173,6 @@
 .secret-sheep-game__controls button:focus-visible {
   outline: 3px solid hsl(var(--primary));
   outline-offset: 3px;
-}
-
-.secret-sheep-game__controls {
-  display: flex;
-  gap: .55rem;
-  margin-top: 1rem;
-}
-
-.secret-sheep-game__controls button {
-  color: hsl(var(--foreground));
-  border-color: hsla(210, 25%, 96%, .25);
-  background: hsla(210, 25%, 96%, .08);
-}
-
-.secret-sheep-game__help {
-  margin: .8rem 0 0;
-  color: hsl(var(--muted-foreground));
-  font-size: .6rem;
-  letter-spacing: .08em;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.secret-sheep-game__help span {
-  color: hsl(var(--primary));
 }
 
 @media (max-width: 700px) {
@@ -1267,17 +1249,13 @@
     margin-top: auto;
   }
 
-  .secret-sheep-game__controls {
-    width: 100%;
+  .secret-sheep-game__overlay {
+    gap: .55rem;
+    padding: .7rem;
   }
 
-  .secret-sheep-game__controls button {
-    flex: 1;
-  }
-
-  .secret-sheep-game__help {
-    margin-bottom: .2rem;
-    font-size: .52rem;
+  .secret-sheep-game__overlay p {
+    font-size: .58rem;
   }
 }
 
