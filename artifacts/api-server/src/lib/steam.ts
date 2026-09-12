@@ -8,6 +8,8 @@ type SteamGame = {
   imageUrl: string | null;
 };
 
+let lastConfirmedGame: SteamGame | null = null;
+
 export type SteamCurrentlyPlaying = {
   status: "playing" | "not_playing" | "unavailable";
   game: SteamGame | null;
@@ -45,6 +47,14 @@ function extractHtmlGameName(source: string): string {
   return decodeXml((match?.[1] ?? "").replace(/<[^>]+>/g, "").trim());
 }
 
+function hasSteamXmlProfile(source: string): boolean {
+  return /<profile\b[^>]*(?:\/>|>[\s\S]*<\/profile>)/i.test(source);
+}
+
+function hasSteamHtmlProfile(source: string): boolean {
+  return /\bprofile_(?:header|summary|content|in_game_name)\b/i.test(source);
+}
+
 function findMostPlayedGameXml(xml: string, name: string): string {
   const blocks = xml.match(/<mostPlayedGame>[\s\S]*?<\/mostPlayedGame>/gi) ?? [];
   const normalizedName = name.trim().toLocaleLowerCase();
@@ -75,7 +85,7 @@ function createGame(name: string, source: string): SteamGame {
 function unavailableState(): SteamCurrentlyPlaying {
   return {
     status: "unavailable",
-    game: null,
+    game: lastConfirmedGame,
     message: "Steam временно недоступен",
   };
 }
@@ -92,8 +102,11 @@ export async function getCurrentSteamState(): Promise<SteamCurrentlyPlaying> {
       signal: AbortSignal.timeout(8_000),
     });
     if (response.ok) {
-      xml = await response.text();
-      xmlAvailable = true;
+      const body = await response.text();
+      if (hasSteamXmlProfile(body)) {
+        xml = body;
+        xmlAvailable = true;
+      }
     }
   } catch {
     // The HTML profile below is a second, independent source.
@@ -103,9 +116,11 @@ export async function getCurrentSteamState(): Promise<SteamCurrentlyPlaying> {
     const currentGame = extractTag(xml, "currentGame");
     const name = extractTag(currentGame, "gameName");
     if (name) {
+      const game = createGame(name, currentGame);
+      lastConfirmedGame = game;
       return {
         status: "playing",
-        game: createGame(name, currentGame),
+        game,
         message: "Сейчас играет в Steam",
       };
     }
@@ -122,21 +137,26 @@ export async function getCurrentSteamState(): Promise<SteamCurrentlyPlaying> {
     });
     if (response.ok) {
       const html = await response.text();
-      htmlAvailable = true;
-      const name = extractHtmlGameName(html);
-      if (name) {
-        return {
-          status: "playing",
-          game: createGame(name, findMostPlayedGameXml(xml, name)),
-          message: "Сейчас играет в Steam",
-        };
+      if (hasSteamHtmlProfile(html)) {
+        htmlAvailable = true;
+        const name = extractHtmlGameName(html);
+        if (name) {
+          const game = createGame(name, findMostPlayedGameXml(xml, name));
+          lastConfirmedGame = game;
+          return {
+            status: "playing",
+            game,
+            message: "Сейчас играет в Steam",
+          };
+        }
       }
     }
   } catch {
     // Fall through to a stable status below.
   }
 
-  if (!xmlAvailable && !htmlAvailable) return unavailableState();
+  if (!xmlAvailable || !htmlAvailable) return unavailableState();
+  lastConfirmedGame = null;
   return {
     status: "not_playing",
     game: null,
