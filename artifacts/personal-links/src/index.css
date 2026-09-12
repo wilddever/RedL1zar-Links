@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -113,7 +112,12 @@
   overflow: hidden;
   background:
     linear-gradient(rgba(1, 8, 14, .48), rgba(1, 8, 14, .7)),
-    url('@assets/background_pc_field_1789138033047.png') center / cover no-repeat fixed;
+    url('@assets/background_pc_field_1789138033047.webp') center / cover no-repeat fixed;
+}
+
+.page-shell img {
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .page-shell::after {
@@ -469,9 +473,11 @@
 
 .steam-now-playing {
   display: flex;
+  width: min(100%, 560px);
+  box-sizing: border-box;
   align-items: center;
   gap: .8rem;
-  margin-top: .9rem;
+  margin: .8rem auto 0;
   padding: .55rem .7rem;
   color: hsl(var(--muted-foreground));
   border: 1px solid hsla(210, 25%, 96%, .13);
@@ -1060,7 +1066,7 @@
   .page-shell {
     background-image:
       linear-gradient(rgba(1, 8, 14, .38), rgba(1, 8, 14, .68)),
-      url('@assets/background_field_1789138038572.png');
+      url('@assets/background_field_1789138038572.webp');
     background-position: center top;
     background-attachment: scroll;
   }
@@ -1073,7 +1079,12 @@
   .hero-description { margin-top: 1.7rem; }
   .now-playing-section { margin-bottom: 3.5rem; }
   .now-playing-header { align-items: flex-start; flex-direction: column; gap: .45rem; }
-  .steam-now-playing { align-items: flex-start; flex-direction: column; gap: .45rem; }
+  .steam-now-playing {
+    width: calc(100% - 1rem);
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .45rem;
+  }
   .link-list { grid-template-columns: 1fr; }
   .platform-link { min-height: 86px; }
   .footer-bar {

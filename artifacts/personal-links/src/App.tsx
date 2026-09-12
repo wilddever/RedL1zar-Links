@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { SiPinterest, SiSpotify, SiSteam, SiTelegram } from 'react-icons/si';
 import {
@@ -128,6 +128,10 @@ const previewTracks: SpotifyCurrentlyPlaying[] = [
 const chaosGlyphs =
   '∆∿⋮※⟟⧖⸮╳░▒▓⌁⌇⌗⌘⌬⌁⍉⎔⏣⨳⟡⧉⸸ꙮȝƛʭЖЖЖ';
 const chaosNameLength = 7;
+
+function preventImageContextMenu(event: MouseEvent<HTMLImageElement>) {
+  event.preventDefault();
+}
 
 function getChaosGlyph() {
   return chaosGlyphs[Math.floor(Math.random() * chaosGlyphs.length)];
@@ -293,7 +297,16 @@ function Home() {
                     target="_blank"
                   >
                     <span className="platform-icon" aria-hidden="true">
-                      {logo ? <img src={logo} alt="" /> : <Icon />}
+                      {logo ? (
+                        <img
+                          src={logo}
+                          alt=""
+                          draggable={false}
+                          onContextMenu={preventImageContextMenu}
+                        />
+                      ) : (
+                        <Icon />
+                      )}
                     </span>
                     <span>
                       <span className="platform-name">{name}</span>
@@ -327,7 +340,12 @@ function Home() {
               }}
               type="button"
             >
-              <img src={roadSign} alt="Дорожный знак с человеком за ноутбуком" />
+              <img
+                src={roadSign}
+                alt="Дорожный знак с человеком за ноутбуком"
+                draggable={false}
+                onContextMenu={preventImageContextMenu}
+              />
             </button>
           </div>
           <div className="footer-actions">
@@ -592,14 +610,19 @@ function NowPlaying() {
         </div>
         <span className="mono-label now-playing-status">{statusLabel}</span>
       </div>
-      <SteamNowPlaying />
-
       {track ? (
         <div
           className="now-playing-card"
         >
           {coverUrl ? (
-            <img className="now-playing-liquid-art" src={coverUrl} alt="" aria-hidden="true" />
+            <img
+              className="now-playing-liquid-art"
+              src={coverUrl}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              onContextMenu={preventImageContextMenu}
+            />
           ) : (
             <span className="now-playing-liquid-fallback" aria-hidden="true" />
           )}
@@ -608,6 +631,8 @@ function NowPlaying() {
               className="now-playing-art"
               src={getSpotifyCoverUrl(track.imageUrl)}
               alt={`Обложка альбома «${track.album}»`}
+              draggable={false}
+              onContextMenu={preventImageContextMenu}
             />
           ) : (
             <span className="now-playing-art now-playing-art--empty" aria-hidden="true">
@@ -639,7 +664,12 @@ function NowPlaying() {
               rel="noreferrer"
               target="_blank"
             >
-              <img src={yandexMusicLogo} alt="" />
+              <img
+                src={yandexMusicLogo}
+                alt=""
+                draggable={false}
+                onContextMenu={preventImageContextMenu}
+              />
             </a>
           </span>
         </div>
@@ -651,6 +681,7 @@ function NowPlaying() {
           <span>{state?.message ?? 'Проверяем Spotify…'}</span>
         </div>
       )}
+      <SteamNowPlaying />
     </section>
   );
 }
@@ -708,7 +739,13 @@ function SteamNowPlaying() {
       <span className="steam-now-playing__label mono-label">steam / now</span>
       <span className="steam-now-playing__content">
         {game?.imageUrl ? (
-          <img className="steam-now-playing__image" src={game.imageUrl} alt="" />
+          <img
+            className="steam-now-playing__image"
+            src={game.imageUrl}
+            alt=""
+            draggable={false}
+            onContextMenu={preventImageContextMenu}
+          />
         ) : (
           <span className="steam-now-playing__image steam-now-playing__image--empty" aria-hidden="true">
             <SiSteam />
