@@ -446,7 +446,7 @@ function SendView() {
       <div className="send-intro">
         <div className="eyebrow mono-label">open channel</div>
         <h1 id="send-title">send</h1>
-        <p>leave me an anonymous message without. it will come to me in Telegram.</p>
+        <p>leave me an anonymous message. it will come to me in Telegram.</p>
       </div>
 
       <form className="send-form" onSubmit={submitMessage}>
