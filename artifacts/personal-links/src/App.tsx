@@ -376,7 +376,7 @@ function PlaylistsView() {
       </div>
 
       <div className="playlist-list">
-        {playlists.map(({ name, number, spotifyHref, yandexHref }) => (
+        {playlists.map(({ name, number, spotifyHref }) => (
           <article className={`playlist-card playlist-card--${number}`} key={name}>
             <div className="playlist-card__index mono-label">{number} / collection</div>
             <div className="playlist-card__body">
@@ -393,16 +393,6 @@ function PlaylistsView() {
                 >
                   <SiSpotify aria-hidden="true" />
                   Spotify
-                  <ExternalLink aria-hidden="true" />
-                </a>
-                <a
-                  className="playlist-action playlist-action--yandex"
-                  href={yandexHref}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <span className="yandex-mark" aria-hidden="true">Я</span>
-                  Яндекс Музыка
                   <ExternalLink aria-hidden="true" />
                 </a>
               </div>
@@ -456,7 +446,7 @@ function SendView() {
       <div className="send-intro">
         <div className="eyebrow mono-label">open channel</div>
         <h1 id="send-title">send</h1>
-        <p>оставь сообщение без имени. оно придёт мне в Telegram.</p>
+        <p>leave me an anonymous message without. it will come to me in Telegram.</p>
       </div>
 
       <form className="send-form" onSubmit={submitMessage}>

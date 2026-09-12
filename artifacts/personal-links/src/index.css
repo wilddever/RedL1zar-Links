@@ -473,7 +473,7 @@
 
 .steam-now-playing {
   display: flex;
-  width: min(100%, 560px);
+  width: 100%;
   box-sizing: border-box;
   align-items: center;
   gap: .8rem;
