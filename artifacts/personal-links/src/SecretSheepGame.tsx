@@ -4,9 +4,9 @@ const WORLD_WIDTH = 960;
 const WORLD_HEIGHT = 540;
 const GROUND_Y = 420;
 const SHEEP_X = 142;
-const SHEEP_WIDTH = 46;
-const SHEEP_STANDING_HEIGHT = 44;
-const SHEEP_DUCKING_HEIGHT = 28;
+const SHEEP_WIDTH = 68;
+const SHEEP_STANDING_HEIGHT = 58;
+const SHEEP_DUCKING_HEIGHT = 34;
 
 type GamePhase = 'ready' | 'playing' | 'gameover';
 type ObstacleKind = 'sign' | 'horse';
@@ -43,8 +43,11 @@ const COLORS = {
   red: '#ed554f',
   green: '#b9df57',
   grey: '#66645f',
-  horse: '#d18b67',
-  horseDark: '#70453d',
+  forestFar: '#172b32',
+  forestNear: '#102126',
+  horse: '#c98b68',
+  horseLight: '#e1ac7f',
+  horseDark: '#6f473f',
 };
 
 function createRuntime(): Runtime {
@@ -81,102 +84,137 @@ function drawPixelSheep(
   bottom: number,
   ducking: boolean,
 ) {
-  const pixel = 4;
-  const standingSprite = [
-    '....WWWWWW..',
-    '..WWWWWWWWWW',
-    '.WWWWWWWWWWW',
-    'WWWWWWWWWWWW',
-    'WWWWWWWWWWDD',
-    'WWWWWWWWWWDD',
-    '..SSSSSS..PP',
-    '..S..S...PP.',
-    '.SS..S.......',
-    '..S..S.......',
-  ];
-  const duckingSprite = [
-    '...WWWWWWWW..',
-    '.WWWWWWWWWWWW',
-    'WWWWWWWWWWWWD',
-    'WWWWWWWWWWDD.',
-    '..SSSSSS..PP.',
-    '.S...S...PP..',
-    'S....S.......',
-  ];
-  const sprite = ducking ? duckingSprite : standingSprite;
-  const startY = bottom - sprite.length * pixel;
+  const y = bottom - (ducking ? SHEEP_DUCKING_HEIGHT : SHEEP_STANDING_HEIGHT);
 
-  sprite.forEach((row, rowIndex) => {
-    [...row].forEach((cell, columnIndex) => {
-      const color =
-        cell === 'W'
-          ? COLORS.white
-          : cell === 'S'
-            ? COLORS.shadow
-            : cell === 'D'
-              ? COLORS.ink
-              : cell === 'P'
-                ? COLORS.red
-                : null;
-      if (color) {
-        fillPixel(
-          context,
-          x + columnIndex * pixel,
-          startY + rowIndex * pixel,
-          pixel,
-          pixel,
-          color,
-        );
-      }
-    });
-  });
-
-  if (!ducking) {
-    fillPixel(context, x + 8, bottom - 4, pixel, 8, COLORS.ink);
-    fillPixel(context, x + 28, bottom - 4, pixel, 8, COLORS.ink);
+  if (ducking) {
+    fillPixel(context, x + 5, y + 10, 43, 19, COLORS.white);
+    fillPixel(context, x + 11, y + 5, 12, 7, COLORS.white);
+    fillPixel(context, x + 27, y + 4, 13, 8, COLORS.white);
+    fillPixel(context, x + 42, y + 12, 17, 16, COLORS.ink);
+    fillPixel(context, x + 54, y + 17, 9, 10, COLORS.ink);
+    fillPixel(context, x + 40, y + 7, 9, 5, COLORS.ink);
+    fillPixel(context, x + 53, y + 16, 4, 4, COLORS.white);
+    fillPixel(context, x + 3, y + 27, 16, 5, COLORS.shadow);
+    fillPixel(context, x + 28, y + 27, 13, 5, COLORS.shadow);
+    return;
   }
+
+  // Large wool body, dark face, ear, eye and four small legs.
+  fillPixel(context, x + 6, y + 19, 43, 24, COLORS.white);
+  fillPixel(context, x + 11, y + 13, 12, 9, COLORS.white);
+  fillPixel(context, x + 25, y + 9, 13, 10, COLORS.white);
+  fillPixel(context, x + 39, y + 14, 12, 10, COLORS.white);
+  fillPixel(context, x + 47, y + 23, 16, 21, COLORS.ink);
+  fillPixel(context, x + 57, y + 29, 10, 13, COLORS.ink);
+  fillPixel(context, x + 45, y + 17, 9, 6, COLORS.ink);
+  fillPixel(context, x + 55, y + 25, 4, 4, COLORS.white);
+  fillPixel(context, x + 62, y + 37, 5, 4, COLORS.ink);
+  fillPixel(context, x + 9, y + 42, 7, 16, COLORS.shadow);
+  fillPixel(context, x + 24, y + 42, 7, 16, COLORS.shadow);
+  fillPixel(context, x + 39, y + 42, 7, 16, COLORS.shadow);
+  fillPixel(context, x + 51, y + 42, 7, 16, COLORS.shadow);
+  fillPixel(context, x + 8, y + 56, 9, 3, COLORS.ink);
+  fillPixel(context, x + 23, y + 56, 9, 3, COLORS.ink);
+  fillPixel(context, x + 38, y + 56, 9, 3, COLORS.ink);
+  fillPixel(context, x + 50, y + 56, 9, 3, COLORS.ink);
 }
 
 function drawPixelSign(context: CanvasRenderingContext2D, x: number, bottom: number) {
-  const poleX = x + 18;
-  fillPixel(context, poleX, bottom - 4, 5, 36, COLORS.grey);
-  fillPixel(context, poleX - 3, bottom + 28, 11, 4, COLORS.grey);
+  const top = bottom - 74;
+  const poleX = x + 30;
+  fillPixel(context, poleX, bottom - 6, 6, 42, COLORS.grey);
+  fillPixel(context, poleX - 5, bottom + 32, 16, 4, COLORS.grey);
 
-  fillPixel(context, x + 3, bottom - 58, 34, 4, COLORS.red);
-  fillPixel(context, x, bottom - 54, 4, 26, COLORS.red);
-  fillPixel(context, x + 37, bottom - 54, 4, 26, COLORS.red);
-  fillPixel(context, x + 3, bottom - 24, 34, 4, COLORS.red);
-  fillPixel(context, x + 7, bottom - 50, 26, 22, COLORS.white);
+  context.fillStyle = COLORS.red;
+  context.beginPath();
+  context.moveTo(x + 33, top);
+  context.lineTo(x + 1, bottom - 15);
+  context.lineTo(x + 65, bottom - 15);
+  context.closePath();
+  context.fill();
 
-  // Pixel version of the person working at a laptop.
-  fillPixel(context, x + 17, bottom - 46, 6, 6, COLORS.ink);
-  fillPixel(context, x + 14, bottom - 40, 12, 8, COLORS.ink);
-  fillPixel(context, x + 8, bottom - 31, 22, 4, COLORS.ink);
-  fillPixel(context, x + 12, bottom - 27, 4, 7, COLORS.ink);
-  fillPixel(context, x + 23, bottom - 27, 4, 7, COLORS.ink);
-  fillPixel(context, x + 28, bottom - 35, 5, 3, COLORS.ink);
+  context.fillStyle = COLORS.white;
+  context.beginPath();
+  context.moveTo(x + 33, top + 8);
+  context.lineTo(x + 11, bottom - 21);
+  context.lineTo(x + 55, bottom - 21);
+  context.closePath();
+  context.fill();
+
+  // A worker with a shovel inside the roadworks triangle.
+  fillPixel(context, x + 29, top + 20, 8, 8, COLORS.ink);
+  fillPixel(context, x + 25, top + 28, 16, 11, COLORS.ink);
+  fillPixel(context, x + 21, top + 38, 9, 5, COLORS.ink);
+  fillPixel(context, x + 37, top + 38, 9, 5, COLORS.ink);
+  fillPixel(context, x + 23, top + 43, 6, 12, COLORS.ink);
+  fillPixel(context, x + 38, top + 43, 6, 12, COLORS.ink);
+  fillPixel(context, x + 45, top + 25, 3, 31, COLORS.ink);
+  fillPixel(context, x + 45, top + 53, 9, 4, COLORS.ink);
 }
 
 function drawPixelHorse(context: CanvasRenderingContext2D, x: number, top: number) {
-  const pixel = 4;
   const y = top;
-  fillPixel(context, x + 12, y + 12, 42, 18, COLORS.horse);
-  fillPixel(context, x + 48, y + 4, 16, 22, COLORS.horse);
-  fillPixel(context, x + 60, y, 12, 12, COLORS.horse);
-  fillPixel(context, x + 68, y + 4, 4, 4, COLORS.ink);
-  fillPixel(context, x + 44, y + 4, 8, 8, COLORS.horseDark);
-  fillPixel(context, x + 4, y + 8, 12, 8, COLORS.horseDark);
-  fillPixel(context, x + 8, y + 4, 4, 12, COLORS.horseDark);
-  fillPixel(context, x + 18, y + 30, pixel, 12, COLORS.horseDark);
-  fillPixel(context, x + 30, y + 30, pixel, 12, COLORS.horseDark);
-  fillPixel(context, x + 52, y + 26, pixel, 16, COLORS.horseDark);
-  fillPixel(context, x + 64, y + 26, pixel, 16, COLORS.horseDark);
-  fillPixel(context, x + 16, y + 8, 4, 4, COLORS.white);
+  const legTop = y + 113;
+
+  // A large side-on horse silhouette. Its body fills the jump arc.
+  fillPixel(context, x + 20, y + 62, 96, 54, COLORS.horse);
+  fillPixel(context, x + 28, y + 53, 72, 13, COLORS.horseLight);
+  fillPixel(context, x + 92, y + 33, 35, 62, COLORS.horse);
+  fillPixel(context, x + 113, y + 19, 37, 42, COLORS.horseLight);
+  fillPixel(context, x + 136, y + 12, 12, 14, COLORS.horse);
+  fillPixel(context, x + 104, y + 24, 13, 12, COLORS.horseDark);
+  fillPixel(context, x + 120, y + 29, 6, 6, COLORS.ink);
+  fillPixel(context, x + 143, y + 34, 9, 7, COLORS.ink);
+  fillPixel(context, x + 116, y + 12, 8, 18, COLORS.horseDark);
+  fillPixel(context, x + 128, y + 7, 8, 22, COLORS.horseDark);
+  fillPixel(context, x + 105, y + 43, 12, 8, COLORS.horseDark);
+  fillPixel(context, x + 12, y + 69, 16, 8, COLORS.horseDark);
+  fillPixel(context, x + 4, y + 62, 12, 8, COLORS.horseDark);
+  fillPixel(context, x + 15, y + 57, 6, 16, COLORS.horseDark);
+  fillPixel(context, x + 34, legTop, 10, 54, COLORS.horseDark);
+  fillPixel(context, x + 61, legTop, 10, 54, COLORS.horseDark);
+  fillPixel(context, x + 91, legTop - 5, 10, 59, COLORS.horseDark);
+  fillPixel(context, x + 113, legTop - 5, 10, 59, COLORS.horseDark);
+  fillPixel(context, x + 31, y + 164, 17, 6, COLORS.ink);
+  fillPixel(context, x + 58, y + 164, 17, 6, COLORS.ink);
+  fillPixel(context, x + 88, y + 159, 17, 6, COLORS.ink);
+  fillPixel(context, x + 110, y + 159, 17, 6, COLORS.ink);
+}
+
+function drawPixelForest(context: CanvasRenderingContext2D, runtime: Runtime) {
+  const farOffset = (runtime.groundOffset * .18) % 170;
+  const nearOffset = (runtime.groundOffset * .32) % 210;
+
+  context.fillStyle = COLORS.forestFar;
+  context.fillRect(0, GROUND_Y - 116, WORLD_WIDTH, 116);
+  for (let x = -170 - farOffset; x < WORLD_WIDTH + 170; x += 170) {
+    context.beginPath();
+    context.moveTo(x + 85, GROUND_Y - 255);
+    context.lineTo(x + 8, GROUND_Y - 116);
+    context.lineTo(x + 162, GROUND_Y - 116);
+    context.closePath();
+    context.fill();
+    fillPixel(context, x + 76, GROUND_Y - 154, 18, 38, COLORS.forestFar);
+  }
+
+  context.fillStyle = COLORS.forestNear;
+  context.fillRect(0, GROUND_Y - 77, WORLD_WIDTH, 77);
+  for (let x = -210 - nearOffset; x < WORLD_WIDTH + 210; x += 210) {
+    context.beginPath();
+    context.moveTo(x + 105, GROUND_Y - 190);
+    context.lineTo(x + 18, GROUND_Y - 77);
+    context.lineTo(x + 192, GROUND_Y - 77);
+    context.closePath();
+    context.fill();
+    fillPixel(context, x + 96, GROUND_Y - 112, 18, 35, COLORS.forestNear);
+  }
 }
 
 function drawGameWorld(context: CanvasRenderingContext2D, runtime: Runtime) {
   context.fillStyle = COLORS.ink;
   context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+  drawPixelForest(context, runtime);
 
   // Sparse pixels keep the screen quiet while preserving the Chrome-game feel.
   fillPixel(context, 96, 104, 4, 4, COLORS.grey);
@@ -265,18 +303,18 @@ function updateRuntime(runtime: Runtime, delta: number): boolean {
       runtime.obstacles.push({
         kind: 'horse',
         x: WORLD_WIDTH + 30,
-        width: 78,
-        top: GROUND_Y - 76,
-        height: 42,
+        width: 160,
+        top: GROUND_Y - 174,
+        height: 174,
       });
       runtime.horseTimer = 2.4 + Math.random() * 1.2;
     } else {
       runtime.obstacles.push({
         kind: 'sign',
         x: WORLD_WIDTH + 30,
-        width: 41,
-        top: GROUND_Y - 58,
-        height: 58,
+        width: 66,
+        top: GROUND_Y - 74,
+        height: 74,
       });
     }
     runtime.obstacleTimer =
@@ -301,6 +339,8 @@ export default function SecretSheepGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const runtimeRef = useRef<Runtime>(createRuntime());
   const phaseRef = useRef<GamePhase>('ready');
+  const gestureStartRef = useRef<{ x: number; y: number; phase: GamePhase } | null>(null);
+  const duckTimeoutRef = useRef<number | null>(null);
   const scoreRef = useRef(0);
   const [phase, setPhase] = useState<GamePhase>('ready');
   const [score, setScore] = useState(0);
@@ -328,6 +368,17 @@ export default function SecretSheepGame() {
       runtimeRef.current.sheep.ducking = ducking;
     }
   }, []);
+
+  const duckFromGesture = useCallback(() => {
+    setDucking(true);
+    if (duckTimeoutRef.current !== null) {
+      window.clearTimeout(duckTimeoutRef.current);
+    }
+    duckTimeoutRef.current = window.setTimeout(() => {
+      setDucking(false);
+      duckTimeoutRef.current = null;
+    }, 420);
+  }, [setDucking]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -370,6 +421,12 @@ export default function SecretSheepGame() {
     return () => window.cancelAnimationFrame(animationFrame);
   }, []);
 
+  useEffect(() => () => {
+    if (duckTimeoutRef.current !== null) {
+      window.clearTimeout(duckTimeoutRef.current);
+    }
+  }, []);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const jumpKey =
@@ -404,12 +461,37 @@ export default function SecretSheepGame() {
     };
   }, [jump, setDucking, startGame]);
 
-  const handleCanvasPointerDown = (event: PointerEvent<HTMLCanvasElement>) => {
+  const handleGamePointerDown = (event: PointerEvent<HTMLElement>) => {
+    if ((event.target as HTMLElement).closest('button')) return;
     event.preventDefault();
-    if (phaseRef.current === 'ready' || phaseRef.current === 'gameover') {
+    gestureStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      phase: phaseRef.current,
+    };
+  };
+
+  const handleGamePointerUp = (event: PointerEvent<HTMLElement>) => {
+    const start = gestureStartRef.current;
+    gestureStartRef.current = null;
+    if (!start || (event.target as HTMLElement).closest('button')) return;
+    event.preventDefault();
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    const isVerticalGesture =
+      Math.abs(deltaY) > 24 && Math.abs(deltaY) > Math.abs(deltaX);
+
+    if (start.phase === 'ready' || start.phase === 'gameover') {
       startGame();
-    } else {
+      return;
+    }
+    if (!isVerticalGesture) {
       jump();
+    } else if (deltaY < 0) {
+      jump();
+    } else {
+      duckFromGesture();
     }
   };
 
@@ -417,7 +499,15 @@ export default function SecretSheepGame() {
   const scoreLabel = String(phase === 'gameover' ? score : scoreRef.current).padStart(5, '0');
 
   return (
-    <main className="secret-sheep-game" aria-label="Secret Sheep Run">
+    <main
+      className="secret-sheep-game"
+      aria-label="Secret Sheep Run"
+      onPointerDown={handleGamePointerDown}
+      onPointerUp={handleGamePointerUp}
+      onPointerCancel={() => {
+        gestureStartRef.current = null;
+      }}
+    >
       <div className="secret-sheep-game__topline">
         <span>sheep / signal</span>
         <span>score {scoreLabel}</span>
@@ -428,7 +518,6 @@ export default function SecretSheepGame() {
           className="secret-sheep-game__canvas"
           width={WORLD_WIDTH}
           height={WORLD_HEIGHT}
-          onPointerDown={handleCanvasPointerDown}
           aria-label="Sheep Run game field"
         />
         {phase === 'ready' ? (
@@ -455,26 +544,6 @@ export default function SecretSheepGame() {
           </div>
         ) : null}
       </div>
-      <div className="secret-sheep-game__controls">
-        <button type="button" onClick={jump}>
-          jump / tap
-        </button>
-        <button
-          type="button"
-          onPointerDown={(event) => {
-            event.preventDefault();
-            setDucking(true);
-          }}
-          onPointerUp={() => setDucking(false)}
-          onPointerCancel={() => setDucking(false)}
-          onPointerLeave={() => setDucking(false)}
-        >
-          duck / hold
-        </button>
-      </div>
-      <p className="secret-sheep-game__help">
-        space / ↑ jump <span>·</span> ↓ duck <span>·</span> tap the field to jump
-      </p>
     </main>
   );
 }
