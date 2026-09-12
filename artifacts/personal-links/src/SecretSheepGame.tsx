@@ -160,14 +160,14 @@ function drawPixelSign(context: CanvasRenderingContext2D, x: number, bottom: num
   context.clip();
 
   // Small, simple seated worker matching the sign on the main page.
-  fillPixel(context, x + 30, top + 18, 4, 4, COLORS.ink);
-  fillPixel(context, x + 29, top + 22, 5, 9, COLORS.ink);
-  fillPixel(context, x + 26, top + 25, 3, 12, COLORS.ink);
-  fillPixel(context, x + 27, top + 32, 10, 3, COLORS.ink);
-  fillPixel(context, x + 34, top + 34, 3, 8, COLORS.ink);
-  fillPixel(context, x + 35, top + 24, 6, 5, COLORS.ink);
-  fillPixel(context, x + 37, top + 29, 2, 5, COLORS.ink);
-  fillPixel(context, x + 33, top + 33, 10, 3, COLORS.ink);
+  fillPixel(context, x + 30, top + 26, 4, 4, COLORS.ink);
+  fillPixel(context, x + 29, top + 30, 5, 9, COLORS.ink);
+  fillPixel(context, x + 26, top + 33, 3, 12, COLORS.ink);
+  fillPixel(context, x + 27, top + 40, 10, 3, COLORS.ink);
+  fillPixel(context, x + 34, top + 42, 3, 8, COLORS.ink);
+  fillPixel(context, x + 35, top + 32, 6, 5, COLORS.ink);
+  fillPixel(context, x + 37, top + 37, 2, 5, COLORS.ink);
+  fillPixel(context, x + 33, top + 41, 10, 3, COLORS.ink);
   context.restore();
 }
 
