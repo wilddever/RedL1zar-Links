@@ -2,7 +2,9 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { SiPinterest, SiSpotify, SiSteam, SiTelegram } from 'react-icons/si';
 import {
+  getCurrentSteamGame,
   getCurrentSpotifyTrack,
+  type SteamCurrentlyPlaying,
   type SpotifyCurrentlyPlaying,
 } from '@workspace/api-client-react';
 import rztLogo from '../../../attached_assets/photo_2026-01-18_13-43-45_1789144600817.jpg';
@@ -590,6 +592,7 @@ function NowPlaying() {
         </div>
         <span className="mono-label now-playing-status">{statusLabel}</span>
       </div>
+      <SteamNowPlaying />
 
       {track ? (
         <div
@@ -649,6 +652,85 @@ function NowPlaying() {
         </div>
       )}
     </section>
+  );
+}
+
+function SteamNowPlaying() {
+  const [state, setState] = useState<SteamCurrentlyPlaying | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    let requestInFlight = false;
+
+    const loadCurrentGame = async () => {
+      if (requestInFlight) return;
+      requestInFlight = true;
+
+      try {
+        const nextState = await getCurrentSteamGame();
+        if (active) setState(nextState);
+      } catch {
+        if (active) {
+          setState({
+            status: 'unavailable',
+            game: null,
+            message: 'Steam временно недоступен',
+          });
+        }
+      } finally {
+        requestInFlight = false;
+      }
+    };
+
+    void loadCurrentGame();
+    const intervalId = window.setInterval(loadCurrentGame, 30_000);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const game = state?.game;
+  const statusText =
+    state?.status === 'playing'
+      ? 'currently playing'
+      : state?.status === 'unavailable'
+        ? 'steam signal'
+        : 'not playing';
+
+  return (
+    <div
+      aria-live="polite"
+      className={`steam-now-playing ${game ? 'steam-now-playing--active' : ''}`}
+      data-testid="steam-now-playing"
+    >
+      <span className="steam-now-playing__label mono-label">steam / now</span>
+      <span className="steam-now-playing__content">
+        {game?.imageUrl ? (
+          <img className="steam-now-playing__image" src={game.imageUrl} alt="" />
+        ) : (
+          <span className="steam-now-playing__image steam-now-playing__image--empty" aria-hidden="true">
+            <SiSteam />
+          </span>
+        )}
+        <span className="steam-now-playing__copy">
+          <span className="steam-now-playing__status mono-label">{statusText}</span>
+          <strong>{game?.name ?? state?.message ?? 'Проверяем Steam…'}</strong>
+        </span>
+        {game ? (
+          <a
+            aria-label={`Открыть ${game.name} в Steam`}
+            className="steam-now-playing__link"
+            href={game.steamUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            ↗
+          </a>
+        ) : null}
+      </span>
+    </div>
   );
 }
 
