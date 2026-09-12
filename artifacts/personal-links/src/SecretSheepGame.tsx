@@ -7,6 +7,8 @@ const SHEEP_X = 142;
 const SHEEP_WIDTH = 68;
 const SHEEP_STANDING_HEIGHT = 58;
 const SHEEP_DUCKING_HEIGHT = 34;
+const SWIPE_THRESHOLD = 14;
+const DUCK_GESTURE_DURATION = 800;
 
 type GamePhase = 'ready' | 'playing' | 'gameover';
 type ObstacleKind = 'sign' | 'horse';
@@ -520,7 +522,7 @@ export default function SecretSheepGame() {
     duckTimeoutRef.current = window.setTimeout(() => {
       setDucking(false);
       duckTimeoutRef.current = null;
-    }, 420);
+    }, DUCK_GESTURE_DURATION);
   }, [setDucking]);
 
   useEffect(() => {
@@ -614,6 +616,22 @@ export default function SecretSheepGame() {
     };
   };
 
+  const handleGamePointerMove = (event: PointerEvent<HTMLElement>) => {
+    const start = gestureStartRef.current;
+    if (!start || start.phase !== 'playing') return;
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (
+      deltaY <= -SWIPE_THRESHOLD &&
+      Math.abs(deltaY) > Math.abs(deltaX)
+    ) {
+      event.preventDefault();
+      gestureStartRef.current = null;
+      jump();
+    }
+  };
+
   const handleGamePointerUp = (event: PointerEvent<HTMLElement>) => {
     const start = gestureStartRef.current;
     gestureStartRef.current = null;
@@ -623,7 +641,7 @@ export default function SecretSheepGame() {
     const deltaX = event.clientX - start.x;
     const deltaY = event.clientY - start.y;
     const isVerticalGesture =
-      Math.abs(deltaY) > 24 && Math.abs(deltaY) > Math.abs(deltaX);
+      Math.abs(deltaY) >= SWIPE_THRESHOLD && Math.abs(deltaY) > Math.abs(deltaX);
 
     if (start.phase === 'ready' || start.phase === 'gameover') {
       startGame();
@@ -646,6 +664,7 @@ export default function SecretSheepGame() {
       className="secret-sheep-game"
       aria-label="Secret Sheep Run"
       onPointerDown={handleGamePointerDown}
+      onPointerMove={handleGamePointerMove}
       onPointerUp={handleGamePointerUp}
       onPointerCancel={() => {
         gestureStartRef.current = null;

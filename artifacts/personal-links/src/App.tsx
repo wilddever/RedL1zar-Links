@@ -226,7 +226,7 @@ function Home() {
     window.requestAnimationFrame(() => setIsSignWobbling(true));
 
     signPressesRef.current += 1;
-    if (signPressesRef.current < 5) return;
+    if (signPressesRef.current < 7) return;
 
     signPressesRef.current = 0;
     window.history.replaceState({}, '', '#home');
