@@ -1071,8 +1071,10 @@
   min-width: 320px;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   overflow: hidden;
   padding: 1rem;
+  min-height: 100dvh;
   color: hsl(var(--foreground));
   background: #000;
   font-family: var(--app-font-mono);
@@ -1082,9 +1084,14 @@
 }
 
 .secret-sheep-game__topline {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  z-index: 2;
   display: flex;
   width: min(100%, 960px);
   justify-content: space-between;
+  transform: translateX(-50%);
   color: hsl(var(--muted-foreground));
   font-size: .66rem;
   letter-spacing: .13em;
@@ -1094,7 +1101,7 @@
 .secret-sheep-game__stage {
   position: relative;
   width: min(100%, 960px);
-  margin: auto 0 0;
+  margin: 0;
 }
 
 .secret-sheep-game__canvas {
@@ -1241,12 +1248,14 @@
   }
 
   .secret-sheep-game__topline {
+    top: .8rem;
+    width: calc(100% - 1.6rem);
     font-size: .56rem;
   }
 
   .secret-sheep-game__stage {
     width: 100%;
-    margin-top: auto;
+    margin: 0;
   }
 
   .secret-sheep-game__overlay {
