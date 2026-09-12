@@ -150,18 +150,28 @@ function drawPixelSign(context: CanvasRenderingContext2D, x: number, bottom: num
   context.closePath();
   context.fill();
 
-  // Compact seated worker kept entirely inside the white triangle.
-  fillPixel(context, x + 26, top + 20, 7, 7, COLORS.ink);
-  fillPixel(context, x + 25, top + 27, 6, 15, COLORS.ink);
-  fillPixel(context, x + 19, top + 29, 4, 20, COLORS.ink);
-  fillPixel(context, x + 20, top + 44, 14, 4, COLORS.ink);
-  fillPixel(context, x + 30, top + 41, 5, 10, COLORS.ink);
-  fillPixel(context, x + 34, top + 48, 11, 3, COLORS.ink);
-  fillPixel(context, x + 32, top + 33, 10, 4, COLORS.ink);
-  fillPixel(context, x + 39, top + 28, 10, 8, COLORS.ink);
-  fillPixel(context, x + 42, top + 36, 4, 3, COLORS.ink);
-  fillPixel(context, x + 47, top + 36, 3, 15, COLORS.ink);
-  fillPixel(context, x + 45, top + 49, 8, 3, COLORS.ink);
+  // Clip the pictogram to the white triangle so no pixel can cross the red frame.
+  context.save();
+  context.beginPath();
+  context.moveTo(x + 33, top + 8);
+  context.lineTo(x + 11, bottom - 21);
+  context.lineTo(x + 55, bottom - 21);
+  context.closePath();
+  context.clip();
+
+  // Compact seated worker matching the sign on the main page.
+  fillPixel(context, x + 27, top + 19, 6, 6, COLORS.ink);
+  fillPixel(context, x + 26, top + 25, 6, 15, COLORS.ink);
+  fillPixel(context, x + 22, top + 29, 4, 16, COLORS.ink);
+  fillPixel(context, x + 23, top + 42, 13, 4, COLORS.ink);
+  fillPixel(context, x + 31, top + 39, 5, 10, COLORS.ink);
+  fillPixel(context, x + 35, top + 47, 10, 3, COLORS.ink);
+  fillPixel(context, x + 33, top + 31, 10, 4, COLORS.ink);
+  fillPixel(context, x + 40, top + 26, 9, 8, COLORS.ink);
+  fillPixel(context, x + 43, top + 34, 4, 3, COLORS.ink);
+  fillPixel(context, x + 47, top + 34, 3, 15, COLORS.ink);
+  fillPixel(context, x + 45, top + 47, 8, 3, COLORS.ink);
+  context.restore();
 }
 
 function drawPixelHorse(context: CanvasRenderingContext2D, x: number, top: number) {
@@ -252,9 +262,9 @@ function drawPixelForest(context: CanvasRenderingContext2D, distance: number) {
     context,
     distance,
     .018,
-    112,
+    96,
     GROUND_Y - 52,
-    [105, 132, 94, 121, 112],
+    [105, 132, 94, 121, 112, 88, 126],
     .58,
     COLORS.forestFar,
   );
@@ -262,9 +272,9 @@ function drawPixelForest(context: CanvasRenderingContext2D, distance: number) {
     context,
     distance,
     .038,
-    142,
+    122,
     GROUND_Y - 24,
-    [142, 111, 157, 126],
+    [142, 111, 157, 126, 98, 148, 118],
     .62,
     COLORS.forestMid,
   );
@@ -272,9 +282,9 @@ function drawPixelForest(context: CanvasRenderingContext2D, distance: number) {
     context,
     distance,
     .07,
-    184,
+    156,
     GROUND_Y + 2,
-    [176, 145, 193, 158],
+    [176, 145, 193, 158, 132, 184],
     .66,
     COLORS.forestNear,
   );
