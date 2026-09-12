@@ -40,16 +40,18 @@ function extractTag(source: string, tagName: string): string {
 
 function extractHtmlGameName(source: string): string {
   const match = source.match(
-    /<div[^>]*class="profile_in_game_name"[^>]*>([\s\S]*?)<\/div>/i,
+    /<div\b[^>]*\bclass\s*=\s*["'][^"']*\bprofile_in_game_name\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i,
   );
   return decodeXml((match?.[1] ?? "").replace(/<[^>]+>/g, "").trim());
 }
 
 function findMostPlayedGameXml(xml: string, name: string): string {
   const blocks = xml.match(/<mostPlayedGame>[\s\S]*?<\/mostPlayedGame>/gi) ?? [];
+  const normalizedName = name.trim().toLocaleLowerCase();
   return (
     blocks.find(
-      (block) => extractTag(block, "gameName").toLocaleLowerCase() === name.toLocaleLowerCase(),
+      (block) =>
+        extractTag(block, "gameName").trim().toLocaleLowerCase() === normalizedName,
     ) ?? ""
   );
 }

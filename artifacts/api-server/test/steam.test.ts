@@ -1,0 +1,88 @@
+import assert from "node:assert/strict";
+import { mock, test } from "node:test";
+
+const { getCurrentSteamState } = await import("../src/lib/steam.ts");
+
+const xmlProfileWithoutCurrentGame = `<?xml version="1.0"?>
+<profile>
+  <mostPlayedGames>
+    <mostPlayedGame>
+      <gameName>Deep Rock Galactic</gameName>
+      <gameLink>https://store.steampowered.com/app/548430/</gameLink>
+      <gameIcon>https://cdn.example.com/deep-rock.png</gameIcon>
+    </mostPlayedGame>
+  </mostPlayedGames>
+</profile>`;
+
+test("uses the HTML active-game fallback and enriches it from matching XML data", async () => {
+  const requests: string[] = [];
+  mock.method(
+    globalThis,
+    "fetch",
+    async (input: RequestInfo | URL) => {
+      const url = String(input);
+      requests.push(url);
+
+      if (url.includes("?xml=1")) {
+        return new Response(xmlProfileWithoutCurrentGame, { status: 200 });
+      }
+
+      return new Response(
+        `<div data-testid="profile" class="profile_header">
+          <div class="profile_in_game_name extra_class">
+            <a>Deep Rock Galactic</a>
+          </div>
+        </div>`,
+        { status: 200 },
+      );
+    },
+  );
+
+  try {
+    assert.deepEqual(await getCurrentSteamState(), {
+      status: "playing",
+      game: {
+        name: "Deep Rock Galactic",
+        appId: "548430",
+        steamUrl: "https://store.steampowered.com/app/548430/",
+        imageUrl: "https://cdn.example.com/deep-rock.png",
+      },
+      message: "Сейчас играет в Steam",
+    });
+    assert.deepEqual(requests, [
+      "https://steamcommunity.com/id/RedL1zar?xml=1",
+      "https://steamcommunity.com/id/RedL1zar",
+    ]);
+  } finally {
+    mock.restoreAll();
+  }
+});
+
+test("returns not_playing when both Steam profiles are available without an active game", async () => {
+  mock.method(
+    globalThis,
+    "fetch",
+    async (input: RequestInfo | URL) => {
+      if (String(input).includes("?xml=1")) {
+        return new Response("<profile><mostPlayedGames /></profile>", {
+          status: 200,
+        });
+      }
+
+      return new Response(
+        '<div class="profile_summary"><span>Offline</span></div>',
+        { status: 200 },
+      );
+    },
+  );
+
+  try {
+    assert.deepEqual(await getCurrentSteamState(), {
+      status: "not_playing",
+      game: null,
+      message: "В Steam ничего не запущено",
+    });
+  } finally {
+    mock.restoreAll();
+  }
+});
