@@ -270,6 +270,31 @@ async function authorizeOwner(
   };
 }
 
+function getSpotifyStateKey(state: string | null) {
+  const nonce = state?.split('.')[0] || '';
+  return /^[a-f0-9]{64}$/.test(nonce)
+    ? `spotify:oauth-state:${nonce}`
+    : null;
+}
+
+async function storeSpotifyState(env: Env, state: string) {
+  const key = getSpotifyStateKey(state);
+  if (!key) throw new Error('Invalid Spotify authorization state');
+  await env.SPOTIFY_KV.put(key, '1', { expirationTtl: 10 * 60 });
+}
+
+function createSpotifyAuthorizationUrl(config: SpotifyConfig, state: string) {
+  const params = new URLSearchParams({
+    client_id: config.clientId,
+    response_type: 'code',
+    redirect_uri: config.redirectUri,
+    state,
+    scope: SPOTIFY_SCOPE,
+    show_dialog: 'true',
+  });
+  return `${SPOTIFY_AUTHORIZE_URL}?${params}`;
+}
+
 async function createSpotifyAuthorizationResponse(
   request: Request,
   env: Env,
@@ -284,19 +309,36 @@ async function createSpotifyAuthorizationResponse(
   if (!config) return noStore({ status: 'not_configured' }, 503);
 
   const state = await createState(config.sessionSecret);
-  const params = new URLSearchParams({
-    client_id: config.clientId,
-    response_type: 'code',
-    redirect_uri: config.redirectUri,
-    state,
-    scope: SPOTIFY_SCOPE,
-    show_dialog: 'true',
-  });
+  await storeSpotifyState(env, state);
 
-  return redirect(`${SPOTIFY_AUTHORIZE_URL}?${params}`, [
+  return redirect(createSpotifyAuthorizationUrl(config, state), [
     makeCookie(request, 'spotify_oauth_state', state, 10 * 60 * 1000),
     ...(owner.cookie ? [owner.cookie] : []),
   ]);
+}
+
+async function createSpotifyAuthorizationUrlResponse(
+  request: Request,
+  env: Env,
+  providedToken: string | null,
+) {
+  const owner = await authorizeOwner(request, env, providedToken);
+  if (!owner.ok) {
+    return noStore(
+      { ok: false, message: 'Spotify authorization is restricted to the page owner.' },
+      403,
+    );
+  }
+
+  const config = getConfig(env);
+  if (!config) return noStore({ ok: false, message: 'Spotify is not configured.' }, 503);
+
+  const state = await createState(config.sessionSecret);
+  await storeSpotifyState(env, state);
+  return noStore({
+    ok: true,
+    authorizationUrl: createSpotifyAuthorizationUrl(config, state),
+  });
 }
 
 function getAllowedSpotifyImageUrl(rawUrl: string) {
@@ -746,25 +788,43 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
     return redirect('/?spotify=owner');
   }
 
+  if (url.pathname === '/api/spotify/owner-auth-url' && request.method === 'POST') {
+    const body = (await request.json().catch(() => null)) as
+      | { ownerToken?: unknown }
+      | null;
+    const providedToken =
+      typeof body?.ownerToken === 'string' ? body.ownerToken : null;
+    return createSpotifyAuthorizationUrlResponse(request, env, providedToken);
+  }
+
   if (url.pathname === '/api/spotify/auth' && request.method === 'GET') {
     return createSpotifyAuthorizationResponse(request, env);
   }
 
   if (url.pathname === '/api/spotify/callback' && request.method === 'GET') {
-    const owner = await authorizeOwner(request, env);
-    if (!owner.ok) {
-      return text('Spotify authorization is restricted to the page owner.', 403);
-    }
     const config = getConfig(env);
     const state = url.searchParams.get('state');
     const stateCookie = readCookie(request, 'spotify_oauth_state');
     const clearState = makeCookie(request, 'spotify_oauth_state', '', 0);
-    if (!config || !stateCookie || state !== stateCookie || !(await isValidState(state, config.sessionSecret))) {
+    const stateKey = getSpotifyStateKey(state);
+    const storedState = stateKey ? await env.SPOTIFY_KV.get(stateKey) : null;
+    const owner = await authorizeOwner(request, env);
+    const stateAuthorized = storedState === '1';
+    if (!owner.ok && !stateAuthorized) {
+      return text('Spotify authorization is restricted to the page owner.', 403);
+    }
+    if (
+      !config ||
+      !(await isValidState(state, config.sessionSecret)) ||
+      (!stateCookie && !stateAuthorized) ||
+      (stateCookie && state !== stateCookie)
+    ) {
       return new Response('Spotify authorization state is invalid.', {
         status: 400,
         headers: { 'Set-Cookie': clearState },
       });
     }
+    if (stateKey) await env.SPOTIFY_KV.delete(stateKey);
     if (url.searchParams.get('error')) {
       return redirect('/?spotify=denied', [clearState]);
     }

@@ -184,6 +184,43 @@ function getViewFromLocation(): View {
 }
 
 function SpotifyOwnerConnect() {
+  const [token, setToken] = useState('');
+  const [status, setStatus] = useState<'idle' | 'connecting' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const connectSpotify = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setStatus('connecting');
+    setErrorMessage('');
+
+    try {
+      const response = await fetch('/api/spotify/owner-auth-url', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ownerToken: token }),
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { authorizationUrl?: string; message?: string }
+        | null;
+
+      if (!response.ok || !result?.authorizationUrl) {
+        throw new Error(
+          result?.message || `Ошибка авторизации (${response.status})`,
+        );
+      }
+
+      setToken('');
+      window.location.assign(result.authorizationUrl);
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Не удалось начать подключение Spotify.',
+      );
+    }
+  };
+
   return (
     <main className="page-shell">
       <div className="content-frame">
@@ -202,14 +239,12 @@ function SpotifyOwnerConnect() {
           <h1 id="owner-connect-title">Connect Spotify</h1>
           <p>
             Эта страница нужна только для первого подключения Spotify. Токен
-            используется один раз для создания защищённой сессии владельца и не
-            сохраняется в браузере.
+            отправляется только в защищённый запрос и не сохраняется в браузере.
           </p>
 
           <form
-            action="/api/spotify/owner-auth"
             className="owner-connect-form"
-            method="post"
+            onSubmit={connectSpotify}
           >
             <label className="owner-connect-field">
               <span className="mono-label">owner token</span>
@@ -217,18 +252,27 @@ function SpotifyOwnerConnect() {
                 autoComplete="off"
                 autoFocus
                 name="ownerToken"
+                onChange={(event) => setToken(event.target.value)}
                 placeholder="Вставьте owner token"
                 required
                 type="password"
+                value={token}
               />
             </label>
             <button
               className="send-submit owner-connect-submit"
+              disabled={status === 'connecting' || !token.trim()}
               type="submit"
             >
-              Подключить Spotify
+              {status === 'connecting' ? 'Проверяем…' : 'Подключить Spotify'}
             </button>
           </form>
+
+          {status === 'error' ? (
+            <p className="send-status send-status--error" role="alert">
+              {errorMessage}
+            </p>
+          ) : null}
         </section>
       </div>
     </main>
