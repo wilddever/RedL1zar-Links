@@ -86,6 +86,7 @@ function drawPixelSheep(
   x: number,
   bottom: number,
   ducking: boolean,
+  time: number,
 ) {
   const y = bottom - (ducking ? SHEEP_DUCKING_HEIGHT : SHEEP_STANDING_HEIGHT);
 
@@ -105,27 +106,44 @@ function drawPixelSheep(
     return;
   }
 
+  const airborne = bottom < GROUND_Y - 1;
+  const step = Math.round(Math.sin(time * 0.018) * 3);
+  const oppositeStep = -step;
+
   // Large wool body, dark face, ear, eye and four small legs.
   fillPixel(context, x + 1, y + 25, 8, 9, COLORS.shadow);
   fillPixel(context, x + 2, y + 20, 6, 7, COLORS.white);
+  fillPixel(context, x + 8, y + 15, 9, 7, COLORS.white);
   fillPixel(context, x + 6, y + 19, 43, 24, COLORS.white);
   fillPixel(context, x + 11, y + 13, 12, 9, COLORS.white);
   fillPixel(context, x + 25, y + 9, 13, 10, COLORS.white);
   fillPixel(context, x + 39, y + 14, 12, 10, COLORS.white);
+  fillPixel(context, x + 17, y + 18, 8, 7, COLORS.white);
   fillPixel(context, x + 47, y + 23, 16, 21, COLORS.ink);
   fillPixel(context, x + 57, y + 29, 10, 13, COLORS.ink);
+  fillPixel(context, x + 52, y + 20, 8, 5, COLORS.ink);
   fillPixel(context, x + 45, y + 16, 9, 7, COLORS.ink);
   fillPixel(context, x + 48, y + 11, 8, 6, COLORS.shadow);
   fillPixel(context, x + 55, y + 25, 4, 4, COLORS.white);
   fillPixel(context, x + 62, y + 37, 5, 4, COLORS.ink);
-  fillPixel(context, x + 9, y + 42, 7, 16, COLORS.shadow);
-  fillPixel(context, x + 24, y + 42, 7, 16, COLORS.shadow);
-  fillPixel(context, x + 39, y + 42, 7, 16, COLORS.shadow);
-  fillPixel(context, x + 51, y + 42, 7, 16, COLORS.shadow);
-  fillPixel(context, x + 8, y + 56, 9, 3, COLORS.ink);
-  fillPixel(context, x + 23, y + 56, 9, 3, COLORS.ink);
-  fillPixel(context, x + 38, y + 56, 9, 3, COLORS.ink);
-  fillPixel(context, x + 50, y + 56, 9, 3, COLORS.ink);
+
+  if (airborne) {
+    // Tuck the legs under the wool while the sheep is in the air.
+    fillPixel(context, x + 10, y + 45, 17, 7, COLORS.shadow);
+    fillPixel(context, x + 34, y + 45, 17, 7, COLORS.shadow);
+    fillPixel(context, x + 7, y + 50, 12, 4, COLORS.ink);
+    fillPixel(context, x + 37, y + 50, 12, 4, COLORS.ink);
+  } else {
+    // Alternating legs make the running cycle readable even at pixel scale.
+    fillPixel(context, x + 9, y + 42, 7, 13 + step, COLORS.shadow);
+    fillPixel(context, x + 24, y + 42, 7, 13 + oppositeStep, COLORS.shadow);
+    fillPixel(context, x + 39, y + 42, 7, 13 + oppositeStep, COLORS.shadow);
+    fillPixel(context, x + 51, y + 42, 7, 13 + step, COLORS.shadow);
+    fillPixel(context, x + 8, y + 55 + step, 9, 3, COLORS.ink);
+    fillPixel(context, x + 23, y + 55 + oppositeStep, 9, 3, COLORS.ink);
+    fillPixel(context, x + 38, y + 55 + oppositeStep, 9, 3, COLORS.ink);
+    fillPixel(context, x + 50, y + 55 + step, 9, 3, COLORS.ink);
+  }
 }
 
 function drawPixelSign(context: CanvasRenderingContext2D, x: number, bottom: number) {
@@ -363,6 +381,7 @@ function drawGameWorld(
     SHEEP_X,
     runtime.sheep.bottom,
     runtime.sheep.ducking,
+    performance.now(),
   );
 
   runtime.obstacles.forEach((obstacle) => {
