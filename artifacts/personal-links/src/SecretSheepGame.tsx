@@ -90,23 +90,29 @@ function drawPixelSheep(
     fillPixel(context, x + 5, y + 10, 43, 19, COLORS.white);
     fillPixel(context, x + 11, y + 5, 12, 7, COLORS.white);
     fillPixel(context, x + 27, y + 4, 13, 8, COLORS.white);
+    fillPixel(context, x + 1, y + 13, 8, 8, COLORS.shadow);
     fillPixel(context, x + 42, y + 12, 17, 16, COLORS.ink);
     fillPixel(context, x + 54, y + 17, 9, 10, COLORS.ink);
     fillPixel(context, x + 40, y + 7, 9, 5, COLORS.ink);
+    fillPixel(context, x + 47, y + 3, 8, 5, COLORS.ink);
     fillPixel(context, x + 53, y + 16, 4, 4, COLORS.white);
+    fillPixel(context, x + 62, y + 22, 5, 4, COLORS.ink);
     fillPixel(context, x + 3, y + 27, 16, 5, COLORS.shadow);
     fillPixel(context, x + 28, y + 27, 13, 5, COLORS.shadow);
     return;
   }
 
   // Large wool body, dark face, ear, eye and four small legs.
+  fillPixel(context, x + 1, y + 25, 8, 9, COLORS.shadow);
+  fillPixel(context, x + 2, y + 20, 6, 7, COLORS.white);
   fillPixel(context, x + 6, y + 19, 43, 24, COLORS.white);
   fillPixel(context, x + 11, y + 13, 12, 9, COLORS.white);
   fillPixel(context, x + 25, y + 9, 13, 10, COLORS.white);
   fillPixel(context, x + 39, y + 14, 12, 10, COLORS.white);
   fillPixel(context, x + 47, y + 23, 16, 21, COLORS.ink);
   fillPixel(context, x + 57, y + 29, 10, 13, COLORS.ink);
-  fillPixel(context, x + 45, y + 17, 9, 6, COLORS.ink);
+  fillPixel(context, x + 45, y + 16, 9, 7, COLORS.ink);
+  fillPixel(context, x + 48, y + 11, 8, 6, COLORS.shadow);
   fillPixel(context, x + 55, y + 25, 4, 4, COLORS.white);
   fillPixel(context, x + 62, y + 37, 5, 4, COLORS.ink);
   fillPixel(context, x + 9, y + 42, 7, 16, COLORS.shadow);
@@ -141,80 +147,125 @@ function drawPixelSign(context: CanvasRenderingContext2D, x: number, bottom: num
   context.closePath();
   context.fill();
 
-  // A worker with a shovel inside the roadworks triangle.
-  fillPixel(context, x + 29, top + 20, 8, 8, COLORS.ink);
-  fillPixel(context, x + 25, top + 28, 16, 11, COLORS.ink);
-  fillPixel(context, x + 21, top + 38, 9, 5, COLORS.ink);
-  fillPixel(context, x + 37, top + 38, 9, 5, COLORS.ink);
-  fillPixel(context, x + 23, top + 43, 6, 12, COLORS.ink);
-  fillPixel(context, x + 38, top + 43, 6, 12, COLORS.ink);
-  fillPixel(context, x + 45, top + 25, 3, 31, COLORS.ink);
-  fillPixel(context, x + 45, top + 53, 9, 4, COLORS.ink);
+  // Seated worker at a desk, matching the reference pictogram.
+  fillPixel(context, x + 24, top + 21, 9, 9, COLORS.ink);
+  fillPixel(context, x + 23, top + 30, 7, 19, COLORS.ink);
+  fillPixel(context, x + 17, top + 32, 5, 24, COLORS.ink);
+  fillPixel(context, x + 18, top + 51, 17, 5, COLORS.ink);
+  fillPixel(context, x + 29, top + 48, 6, 15, COLORS.ink);
+  fillPixel(context, x + 34, top + 60, 15, 4, COLORS.ink);
+  fillPixel(context, x + 34, top + 49, 5, 14, COLORS.ink);
+  fillPixel(context, x + 31, top + 37, 13, 5, COLORS.ink);
+  fillPixel(context, x + 40, top + 32, 12, 9, COLORS.ink);
+  fillPixel(context, x + 43, top + 41, 5, 4, COLORS.ink);
+  fillPixel(context, x + 49, top + 41, 4, 19, COLORS.ink);
+  fillPixel(context, x + 47, top + 59, 9, 4, COLORS.ink);
 }
 
 function drawPixelHorse(context: CanvasRenderingContext2D, x: number, top: number) {
   const y = top;
-  const legTop = y + 113;
 
-  // A large side-on horse silhouette. Its body fills the jump arc.
-  fillPixel(context, x + 20, y + 62, 96, 54, COLORS.horse);
-  fillPixel(context, x + 28, y + 53, 72, 13, COLORS.horseLight);
-  fillPixel(context, x + 92, y + 33, 35, 62, COLORS.horse);
-  fillPixel(context, x + 113, y + 19, 37, 42, COLORS.horseLight);
-  fillPixel(context, x + 136, y + 12, 12, 14, COLORS.horse);
-  fillPixel(context, x + 104, y + 24, 13, 12, COLORS.horseDark);
-  fillPixel(context, x + 120, y + 29, 6, 6, COLORS.ink);
-  fillPixel(context, x + 143, y + 34, 9, 7, COLORS.ink);
-  fillPixel(context, x + 116, y + 12, 8, 18, COLORS.horseDark);
-  fillPixel(context, x + 128, y + 7, 8, 22, COLORS.horseDark);
-  fillPixel(context, x + 105, y + 43, 12, 8, COLORS.horseDark);
-  fillPixel(context, x + 12, y + 69, 16, 8, COLORS.horseDark);
-  fillPixel(context, x + 4, y + 62, 12, 8, COLORS.horseDark);
-  fillPixel(context, x + 15, y + 57, 6, 16, COLORS.horseDark);
-  fillPixel(context, x + 34, legTop, 10, 54, COLORS.horseDark);
-  fillPixel(context, x + 61, legTop, 10, 54, COLORS.horseDark);
-  fillPixel(context, x + 91, legTop - 5, 10, 59, COLORS.horseDark);
-  fillPixel(context, x + 113, legTop - 5, 10, 59, COLORS.horseDark);
-  fillPixel(context, x + 31, y + 164, 17, 6, COLORS.ink);
-  fillPixel(context, x + 58, y + 164, 17, 6, COLORS.ink);
-  fillPixel(context, x + 88, y + 159, 17, 6, COLORS.ink);
-  fillPixel(context, x + 110, y + 159, 17, 6, COLORS.ink);
+  // Large flying horse with folded legs and visible wings.
+  fillPixel(context, x + 23, y + 45, 94, 31, COLORS.horse);
+  fillPixel(context, x + 31, y + 38, 71, 11, COLORS.horseLight);
+  fillPixel(context, x + 93, y + 27, 28, 49, COLORS.horse);
+  fillPixel(context, x + 111, y + 15, 38, 32, COLORS.horseLight);
+  fillPixel(context, x + 137, y + 9, 13, 13, COLORS.horse);
+  fillPixel(context, x + 103, y + 19, 12, 12, COLORS.horseDark);
+  fillPixel(context, x + 118, y + 25, 6, 6, COLORS.ink);
+  fillPixel(context, x + 143, y + 29, 9, 7, COLORS.ink);
+  fillPixel(context, x + 113, y + 8, 8, 17, COLORS.horseDark);
+  fillPixel(context, x + 127, y + 5, 8, 20, COLORS.horseDark);
+  fillPixel(context, x + 103, y + 37, 12, 8, COLORS.horseDark);
+  fillPixel(context, x + 8, y + 52, 17, 8, COLORS.horseDark);
+  fillPixel(context, x + 1, y + 46, 12, 8, COLORS.horseDark);
+  fillPixel(context, x + 12, y + 40, 6, 15, COLORS.horseDark);
+
+  // Wings make the airborne state readable at a glance.
+  fillPixel(context, x + 46, y + 22, 46, 8, COLORS.horseLight);
+  fillPixel(context, x + 39, y + 14, 48, 8, COLORS.horseLight);
+  fillPixel(context, x + 49, y + 6, 29, 8, COLORS.horseLight);
+  fillPixel(context, x + 54, y + 30, 38, 7, COLORS.horseDark);
+  fillPixel(context, x + 59, y + 37, 24, 6, COLORS.horseDark);
+
+  // Tucked legs and hooves leave a clear passage underneath.
+  fillPixel(context, x + 38, y + 73, 25, 9, COLORS.horseDark);
+  fillPixel(context, x + 75, y + 73, 27, 9, COLORS.horseDark);
+  fillPixel(context, x + 32, y + 80, 18, 7, COLORS.ink);
+  fillPixel(context, x + 91, y + 80, 18, 7, COLORS.ink);
 }
 
-function drawPixelForest(context: CanvasRenderingContext2D, runtime: Runtime) {
-  const farOffset = (runtime.groundOffset * .18) % 170;
-  const nearOffset = (runtime.groundOffset * .32) % 210;
+function drawPixelPine(
+  context: CanvasRenderingContext2D,
+  x: number,
+  base: number,
+  height: number,
+  width: number,
+  color: string,
+) {
+  fillPixel(
+    context,
+    x + width / 2 - 5,
+    base - height * .42,
+    10,
+    height * .42,
+    color,
+  );
 
-  context.fillStyle = COLORS.forestFar;
-  context.fillRect(0, GROUND_Y - 116, WORLD_WIDTH, 116);
-  for (let x = -170 - farOffset; x < WORLD_WIDTH + 170; x += 170) {
+  const tiers = [
+    { top: base - height, half: width * .12 },
+    { top: base - height * .78, half: width * .27 },
+    { top: base - height * .55, half: width * .42 },
+    { top: base - height * .3, half: width * .5 },
+  ];
+  context.fillStyle = color;
+  tiers.forEach(({ top, half }) => {
     context.beginPath();
-    context.moveTo(x + 85, GROUND_Y - 255);
-    context.lineTo(x + 8, GROUND_Y - 116);
-    context.lineTo(x + 162, GROUND_Y - 116);
+    context.moveTo(x + width / 2, top);
+    context.lineTo(x + width / 2 - half, base - height * .18);
+    context.lineTo(x + width / 2 + half, base - height * .18);
     context.closePath();
     context.fill();
-    fillPixel(context, x + 76, GROUND_Y - 154, 18, 38, COLORS.forestFar);
-  }
+  });
+}
+
+function drawPixelForest(context: CanvasRenderingContext2D) {
+  context.fillStyle = COLORS.forestFar;
+  context.fillRect(0, GROUND_Y - 112, WORLD_WIDTH, 112);
+  [
+    [32, 150, 94],
+    [154, 105, 72],
+    [267, 142, 92],
+    [398, 112, 77],
+    [520, 160, 101],
+    [671, 119, 83],
+    [793, 150, 96],
+    [908, 112, 82],
+  ].forEach(([x, height, width]) => {
+    drawPixelPine(context, x, GROUND_Y - 20, height, width, COLORS.forestFar);
+  });
 
   context.fillStyle = COLORS.forestNear;
-  context.fillRect(0, GROUND_Y - 77, WORLD_WIDTH, 77);
-  for (let x = -210 - nearOffset; x < WORLD_WIDTH + 210; x += 210) {
-    context.beginPath();
-    context.moveTo(x + 105, GROUND_Y - 190);
-    context.lineTo(x + 18, GROUND_Y - 77);
-    context.lineTo(x + 192, GROUND_Y - 77);
-    context.closePath();
-    context.fill();
-    fillPixel(context, x + 96, GROUND_Y - 112, 18, 35, COLORS.forestNear);
-  }
+  context.fillRect(0, GROUND_Y - 68, WORLD_WIDTH, 68);
+  [
+    [8, 92, 68],
+    [98, 134, 86],
+    [225, 100, 72],
+    [342, 145, 92],
+    [482, 106, 78],
+    [600, 137, 88],
+    [735, 101, 73],
+    [850, 143, 94],
+  ].forEach(([x, height, width]) => {
+    drawPixelPine(context, x, GROUND_Y + 2, height, width, COLORS.forestNear);
+  });
 }
 
 function drawGameWorld(context: CanvasRenderingContext2D, runtime: Runtime) {
   context.fillStyle = COLORS.ink;
   context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-  drawPixelForest(context, runtime);
+  drawPixelForest(context);
 
   // Sparse pixels keep the screen quiet while preserving the Chrome-game feel.
   fillPixel(context, 96, 104, 4, 4, COLORS.grey);
@@ -304,8 +355,8 @@ function updateRuntime(runtime: Runtime, delta: number): boolean {
         kind: 'horse',
         x: WORLD_WIDTH + 30,
         width: 160,
-        top: GROUND_Y - 174,
-        height: 174,
+        top: GROUND_Y - 152,
+        height: 104,
       });
       runtime.horseTimer = 2.4 + Math.random() * 1.2;
     } else {
