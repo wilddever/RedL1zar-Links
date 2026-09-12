@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { CalendarPlus, ExternalLink } from 'lucide-react';
 import { SiPinterest, SiSpotify, SiSteam, SiTelegram } from 'react-icons/si';
 import {
   getCurrentSteamGame,
@@ -174,10 +174,11 @@ function ChaoticName() {
   );
 }
 
-type View = 'home' | 'playlists' | 'send';
+type View = 'home' | 'playlists' | 'birthday' | 'send';
 
 function getViewFromLocation(): View {
   if (window.location.hash === '#playlists') return 'playlists';
+  if (window.location.hash === '#birthday') return 'birthday';
   if (window.location.hash === '#send') return 'send';
   return 'home';
 }
@@ -203,7 +204,13 @@ function Home() {
 
   const navigateTo = (view: View) => {
     const nextHash =
-      view === 'playlists' ? '#playlists' : view === 'send' ? '#send' : '#home';
+      view === 'playlists'
+        ? '#playlists'
+        : view === 'birthday'
+          ? '#birthday'
+          : view === 'send'
+            ? '#send'
+            : '#home';
     if (window.location.hash !== nextHash) {
       window.history.pushState({}, '', nextHash);
     }
@@ -277,6 +284,15 @@ function Home() {
           >
             send
           </button>
+          <button
+            aria-current={activeView === 'birthday' ? 'page' : undefined}
+            className={`section-nav__tab ${activeView === 'birthday' ? 'section-nav__tab--active' : ''}`}
+            data-testid="button-section-birthday"
+            onClick={() => navigateTo('birthday')}
+            type="button"
+          >
+            birthday
+          </button>
         </nav>
 
         {activeView === 'home' ? (
@@ -338,6 +354,8 @@ function Home() {
           </>
         ) : activeView === 'playlists' ? (
           <PlaylistsView />
+        ) : activeView === 'birthday' ? (
+          <BirthdayView />
         ) : (
           <SendView />
         )}
@@ -414,6 +432,110 @@ function PlaylistsView() {
           </article>
         ))}
       </div>
+    </section>
+  );
+}
+
+function getNextBirthday(now: Date) {
+  const birthday = new Date(now.getFullYear(), 7, 13);
+  if (birthday.getTime() < now.getTime()) {
+    birthday.setFullYear(birthday.getFullYear() + 1);
+  }
+  return birthday;
+}
+
+function escapeIcsValue(value: string) {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r?\n/g, '\\n');
+}
+
+function formatIcsTimestamp(date: Date) {
+  return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+}
+
+function downloadBirthdayCalendar() {
+  const year = new Date().getFullYear();
+  const startDate = `${year}0813`;
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//RedL1zar//Birthday//EN',
+    'CALSCALE:GREGORIAN',
+    'X-WR-CALNAME:RedL1zar birthday',
+    'BEGIN:VEVENT',
+    'UID:redl1zar-birthday@personal-links',
+    `DTSTAMP:${formatIcsTimestamp(new Date())}`,
+    `DTSTART;VALUE=DATE:${startDate}`,
+    'RRULE:FREQ=YEARLY;BYMONTH=8;BYMONTHDAY=13',
+    `SUMMARY:${escapeIcsValue("RedL1zar's birthday")}`,
+    `DESCRIPTION:${escapeIcsValue('RedL1zar birthday — 13 August')}`,
+    'TRANSP:TRANSPARENT',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+  const blobUrl = URL.createObjectURL(
+    new Blob([ics], { type: 'text/calendar;charset=utf-8' }),
+  );
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = 'redl1zar-birthday.ics';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+}
+
+function BirthdayView() {
+  const [now, setNow] = useState(() => new Date());
+  const birthday = getNextBirthday(now);
+  const remaining = Math.max(0, birthday.getTime() - now.getTime());
+  const days = Math.floor(remaining / 86_400_000);
+  const hours = Math.floor((remaining % 86_400_000) / 3_600_000);
+  const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+  const seconds = Math.floor((remaining % 60_000) / 1_000);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <section className="birthday-section" aria-labelledby="birthday-title">
+      <div className="birthday-intro">
+        <div className="eyebrow mono-label">next personal signal</div>
+        <h1 id="birthday-title">13 august</h1>
+        <p>counting down to the next orbit around the sun.</p>
+      </div>
+
+      <div className="birthday-countdown" aria-live="polite">
+        {[
+          ['days', days],
+          ['hours', hours],
+          ['minutes', minutes],
+          ['seconds', seconds],
+        ].map(([label, value]) => (
+          <div className="birthday-countdown__unit" key={label}>
+            <strong>{String(value).padStart(2, '0')}</strong>
+            <span>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      <button
+        className="birthday-calendar-button"
+        data-testid="button-add-birthday-calendar"
+        onClick={downloadBirthdayCalendar}
+        type="button"
+      >
+        <CalendarPlus aria-hidden="true" />
+        add to device calendar
+      </button>
+      <p className="birthday-note">
+        downloads a yearly calendar event for 13 August.
+      </p>
     </section>
   );
 }
