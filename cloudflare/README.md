@@ -1,6 +1,6 @@
 # RedL1zar на Cloudflare
 
-Этот пакет переносит сайт и его API в один Cloudflare Worker:
+Этот пакет переносит сайт и его API в Cloudflare Worker:
 
 - React/Vite-страница отдаётся как static assets;
 - `/api/spotify/*` — Spotify OAuth, текущий трек и proxy обложки;
@@ -8,6 +8,68 @@
 - `/api/yandex/track` — поиск трека в Яндекс Музыке;
 - `/api/send` — анонимная отправка сообщения в Telegram;
 - refresh token Spotify и короткий rate limit Telegram хранятся в Cloudflare KV.
+
+## Рекомендуемая схема для пользователей из России
+
+Чтобы не отдавать первый экран через Cloudflare, frontend можно разместить в
+Yandex Cloud, а Worker оставить API:
+
+```text
+https://xn--d1ax3b.fun       → Yandex Cloud CDN / Object Storage
+https://api.xn--d1ax3b.fun   → Cloudflare Worker
+```
+
+Frontend автоматически использует `api.xn--d1ax3b.fun` на production-домене.
+Для локальной разработки остаются относительные `/api/*`-пути.
+
+### 1. Сначала подключить API-поддомен
+
+В Cloudflare Dashboard откройте Worker `redl1zar-personal-links` → **Settings
+→ Domains & Routes → Add → Custom Domain** и добавьте:
+
+```text
+api.xn--d1ax3b.fun
+```
+
+После этого проверьте:
+
+```bash
+curl -i https://api.xn--d1ax3b.fun/api/healthz
+```
+
+В Spotify Developer Dashboard замените Redirect URI на:
+
+```text
+https://api.xn--d1ax3b.fun/api/spotify/callback
+```
+
+И обновите production secret `SPOTIFY_REDIRECT_URI` тем же значением.
+
+### 2. Создать frontend в Yandex Cloud
+
+В Yandex Cloud:
+
+1. Создайте bucket Object Storage с именем, которое сможете использовать как
+   origin для CDN.
+2. Загрузите содержимое каталога `dist/` после команды `npm run build`.
+3. Создайте ресурс Yandex Cloud CDN с bucket как origin.
+4. Добавьте к CDN custom domain `xn--d1ax3b.fun`.
+5. Выпустите или подключите TLS-сертификат для `xn--d1ax3b.fun`.
+6. В DNS Cloudflare добавьте запись, которую выдаст Yandex CDN, для корневого
+   домена и оставьте её **DNS only**, без проксирования Cloudflare.
+
+До переключения DNS проверьте CDN на выданном Yandex тестовом адресе. После
+переключения `https://xn--d1ax3b.fun` должен отдавать `dist/index.html`, а
+запросы frontend к `/api/*` будут уходить на `api.xn--d1ax3b.fun`.
+
+Для хешированных файлов из `dist/assets/` установите в CDN длительный cache:
+
+```text
+Cache-Control: public, max-age=31536000, immutable
+```
+
+Для `index.html` оставьте короткий cache или revalidation, чтобы новые версии
+сайта появлялись сразу после загрузки.
 
 Секреты в архив не включены. Их нужно добавить через `wrangler secret put`.
 
