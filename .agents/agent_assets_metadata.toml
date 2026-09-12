@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "H4lAcRfIFy4-Npx7wCVwQ"
+uri = "file://attached_assets/secret-sign-preview.svg"
+type = "image"
+title = "Preview дорожного знака"
+description = "Упрощённая пиктограмма человека за компьютером внутри белого треугольника; clipping совпадает с отрисовкой в секретной игре."
+logical_id = "c070fb6e-dc83-4827-8d10-09eaf05d64fd"
+content_hash = "sha256:05c881d7b635b399f289d5a86523a02725a15d775d2cbb95f94116f33af768e8"
+size = 1168
+mtime_ms = 1789211299877
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/c070fb6e-dc83-4827-8d10-09eaf05d64fd/a5e4f105-1894-4487-be0e-ebf365693486"
+storage_version_token = "1789211326407664"
+content_type = "image/svg+xml"
