@@ -381,6 +381,24 @@ async function requestSpotifyToken(
   };
 }
 
+async function storeSpotifyAccessToken(
+  env: Env,
+  accessToken: string,
+  expiresIn: number,
+) {
+  const expiresAt = Date.now() + expiresIn * 1000;
+  const expirationTtl = Math.max(60, Math.min(3600, expiresIn));
+  await Promise.all([
+    env.SPOTIFY_KV.put('spotify:access_token', accessToken, {
+      expirationTtl,
+    }),
+    env.SPOTIFY_KV.put('spotify:access_expires_at', String(expiresAt), {
+      expirationTtl,
+    }),
+  ]);
+  accessTokenCache = { accessToken, expiresAt };
+}
+
 async function refreshAccessToken(
   env: Env,
   config: SpotifyConfig,
@@ -398,7 +416,24 @@ async function refreshAccessToken(
 
   refreshInFlight = (async () => {
     const refreshToken = await env.SPOTIFY_KV.get('spotify:refresh_token');
-    if (!refreshToken) return null;
+    if (!refreshToken) {
+      const temporaryAccessToken = await env.SPOTIFY_KV.get('spotify:access_token');
+      const temporaryExpiresAt = Number(
+        await env.SPOTIFY_KV.get('spotify:access_expires_at'),
+      );
+      if (
+        temporaryAccessToken &&
+        Number.isFinite(temporaryExpiresAt) &&
+        temporaryExpiresAt > Date.now() + 60_000
+      ) {
+        accessTokenCache = {
+          accessToken: temporaryAccessToken,
+          expiresAt: temporaryExpiresAt,
+        };
+        return temporaryAccessToken;
+      }
+      return null;
+    }
     const token = await requestSpotifyToken(
       new URLSearchParams({
         grant_type: 'refresh_token',
@@ -410,6 +445,7 @@ async function refreshAccessToken(
       accessToken: token.access_token,
       expiresAt: Date.now() + token.expires_in * 1000,
     };
+    await storeSpotifyAccessToken(env, token.access_token, token.expires_in);
     if (token.refresh_token && token.refresh_token !== refreshToken) {
       await env.SPOTIFY_KV.put('spotify:refresh_token', token.refresh_token);
     }
@@ -477,6 +513,14 @@ async function getCurrentSpotifyState(env: Env): Promise<SpotifyPublicState> {
     };
   }
 
+  const lastCallbackStatus = await env.SPOTIFY_KV.get('spotify:last_callback_status');
+  const callbackMessage =
+    lastCallbackStatus === 'token_exchange_unauthorized'
+      ? 'Spotify отклонил обмен authorization code. Проверьте Redirect URI и повторите авторизацию.'
+      : lastCallbackStatus === 'token_exchange_failed'
+        ? 'Spotify не завершил подключение. Повторите официальную авторизацию.'
+        : null;
+
   let accessToken: string | null;
   try {
     accessToken = await refreshAccessToken(env, config);
@@ -485,7 +529,7 @@ async function getCurrentSpotifyState(env: Env): Promise<SpotifyPublicState> {
       return {
         status: 'not_connected',
         track: null,
-        message: 'Подключите Spotify через официальную авторизацию',
+        message: callbackMessage ?? 'Подключите Spotify через официальную авторизацию',
       };
     }
     throw error;
@@ -494,7 +538,7 @@ async function getCurrentSpotifyState(env: Env): Promise<SpotifyPublicState> {
     return {
       status: 'not_connected',
       track: null,
-      message: 'Подключите Spotify через официальную авторизацию',
+      message: callbackMessage ?? 'Подключите Spotify через официальную авторизацию',
     };
   }
   if (Date.now() < spotifyBackoffUntil) {
@@ -839,14 +883,27 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
         }),
         config,
       );
-      if (!token.refresh_token) throw new Error('Spotify did not return a refresh token');
-      await env.SPOTIFY_KV.put('spotify:refresh_token', token.refresh_token);
-      accessTokenCache = {
-        accessToken: token.access_token,
-        expiresAt: Date.now() + token.expires_in * 1000,
-      };
+      const existingRefreshToken = await env.SPOTIFY_KV.get('spotify:refresh_token');
+      if (token.refresh_token) {
+        await env.SPOTIFY_KV.put('spotify:refresh_token', token.refresh_token);
+      } else if (!existingRefreshToken) {
+        await env.SPOTIFY_KV.put(
+          'spotify:last_callback_status',
+          'connected_without_refresh_token',
+          { expirationTtl: 24 * 60 * 60 },
+        );
+      }
+      await storeSpotifyAccessToken(env, token.access_token, token.expires_in);
+      await env.SPOTIFY_KV.delete('spotify:last_callback_status');
       return redirect('/?spotify=connected', [clearState]);
-    } catch {
+    } catch (error) {
+      const callbackStatus =
+        error instanceof SpotifyTokenUnauthorizedError
+          ? 'token_exchange_unauthorized'
+          : 'token_exchange_failed';
+      await env.SPOTIFY_KV.put('spotify:last_callback_status', callbackStatus, {
+        expirationTtl: 24 * 60 * 60,
+      });
       return redirect('/?spotify=error', [clearState]);
     }
   }

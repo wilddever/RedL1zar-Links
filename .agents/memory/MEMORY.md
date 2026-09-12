@@ -1,5 +1,6 @@
 - [Spotify polling](spotify-polling.md) — public polling responses must disable caching because the generated fetch treats 304 as an error.
 - [Spotify owner authorization](spotify-owner-auth.md) — accept the owner token only to mint an HttpOnly session; never put it in an authorization URL.
+- [Spotify OAuth callback](spotify-oauth-callback.md) — persist a short-lived access token when Spotify omits a refresh token, and preserve an inspectable callback status.
 - [Workspace dependency installs](pnpm-workspace-install.md) — verify workspace config after pnpm adds a package because formatting and override keys may be rewritten.
 - [Yandex Music lookup](yandex-music-lookup.md) — the public API can return regional 451 responses; use the web search fallback for valid track metadata.
 - [Steam current-game detection](steam-current-game.md) — XML can omit currentGame while the public HTML profile still shows the active game.
