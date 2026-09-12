@@ -742,6 +742,10 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
     return createSpotifyAuthorizationResponse(request, env, providedToken);
   }
 
+  if (url.pathname === '/api/spotify/owner-auth' && request.method === 'GET') {
+    return redirect('/?spotify=owner');
+  }
+
   if (url.pathname === '/api/spotify/auth' && request.method === 'GET') {
     return createSpotifyAuthorizationResponse(request, env);
   }
