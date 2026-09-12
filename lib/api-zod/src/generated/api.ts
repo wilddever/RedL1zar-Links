@@ -35,6 +35,22 @@ export const GetCurrentSpotifyTrackResponse = zod.object({
 
 
 /**
+ * Returns the current game from the public Steam profile without exposing credentials.
+ * @summary Get the public Steam currently playing game
+ */
+export const GetCurrentSteamGameResponse = zod.object({
+  "status": zod.enum(['playing', 'not_playing', 'unavailable']),
+  "game": zod.object({
+  "name": zod.string(),
+  "appId": zod.string().nullable(),
+  "steamUrl": zod.string().url(),
+  "imageUrl": zod.string().url().nullable()
+}).nullable(),
+  "message": zod.string()
+})
+
+
+/**
  * @summary Find the current track in Yandex Music
  */
 export const FindYandexTrackQueryParams = zod.object({

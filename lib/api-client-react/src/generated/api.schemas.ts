@@ -35,6 +35,28 @@ export interface SpotifyCurrentlyPlaying {
   message: string;
 }
 
+export interface SteamGame {
+  name: string;
+  appId: string | null;
+  steamUrl: string;
+  imageUrl: string | null;
+}
+
+export type SteamCurrentlyPlayingStatus = typeof SteamCurrentlyPlayingStatus[keyof typeof SteamCurrentlyPlayingStatus];
+
+
+export const SteamCurrentlyPlayingStatus = {
+  playing: 'playing',
+  not_playing: 'not_playing',
+  unavailable: 'unavailable',
+} as const;
+
+export interface SteamCurrentlyPlaying {
+  status: SteamCurrentlyPlayingStatus;
+  game: SteamGame | null;
+  message: string;
+}
+
 export interface YandexTrackLink {
   url: string;
 }

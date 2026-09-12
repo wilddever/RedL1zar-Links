@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: spotify
     description: Public Spotify now-playing data
+  - name: steam
+    description: Public Steam now-playing data
   - name: yandex
     description: Yandex Music track lookup
   - name: messages
@@ -43,6 +45,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SpotifyCurrentlyPlaying"
+  /steam/currently-playing:
+    get:
+      operationId: getCurrentSteamGame
+      tags: [steam]
+      summary: Get the public Steam currently playing game
+      description: Returns the current game from the public Steam profile without exposing credentials.
+      responses:
+        "200":
+          description: Current Steam game state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SteamCurrentlyPlaying"
   /yandex/track:
     get:
       operationId: findYandexTrack
@@ -147,6 +162,45 @@ components:
       required:
         - status
         - track
+        - message
+    SteamGame:
+      type: object
+      properties:
+        name:
+          type: string
+        appId:
+          type: string
+          nullable: true
+        steamUrl:
+          type: string
+          format: uri
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+      required:
+        - name
+        - appId
+        - steamUrl
+        - imageUrl
+    SteamCurrentlyPlaying:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - playing
+            - not_playing
+            - unavailable
+        game:
+          allOf:
+            - $ref: "#/components/schemas/SteamGame"
+          nullable: true
+        message:
+          type: string
+      required:
+        - status
+        - game
         - message
     YandexTrackLink:
       type: object

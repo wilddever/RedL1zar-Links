@@ -14,4 +14,7 @@ export * from './sendMessageResponse';
 export * from './spotifyCurrentlyPlaying';
 export * from './spotifyCurrentlyPlayingStatus';
 export * from './spotifyTrack';
+export * from './steamCurrentlyPlaying';
+export * from './steamCurrentlyPlayingStatus';
+export * from './steamGame';
 export * from './yandexTrackLink';

@@ -25,6 +25,7 @@ import type {
   SendMessageRequest,
   SendMessageResponse,
   SpotifyCurrentlyPlaying,
+  SteamCurrentlyPlaying,
   YandexTrackLink
 } from './api.schemas';
 
@@ -199,6 +200,84 @@ export function useGetCurrentSpotifyTrack<TData = Awaited<ReturnType<typeof getC
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetCurrentSpotifyTrackQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetCurrentSteamGameUrl = () => {
+
+
+
+
+  return `/api/steam/currently-playing`
+}
+
+/**
+ * Returns the current game from the public Steam profile without exposing credentials.
+ * @summary Get the public Steam currently playing game
+ */
+export const getCurrentSteamGame = async ( options?: Parameters<typeof customFetch>[1]): Promise<SteamCurrentlyPlaying> => {
+
+  return customFetch<SteamCurrentlyPlaying>(getGetCurrentSteamGameUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCurrentSteamGameQueryKey = () => {
+    return [
+    `/api/steam/currently-playing`
+    ] as const;
+    }
+
+
+export const getGetCurrentSteamGameQueryOptions = <TData = Awaited<ReturnType<typeof getCurrentSteamGame>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentSteamGame>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCurrentSteamGameQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentSteamGame>>> = ({ signal }) => getCurrentSteamGame({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCurrentSteamGame>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCurrentSteamGameQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrentSteamGame>>>
+export type GetCurrentSteamGameQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the public Steam currently playing game
+ */
+
+export function useGetCurrentSteamGame<TData = Awaited<ReturnType<typeof getCurrentSteamGame>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentSteamGame>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCurrentSteamGameQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
