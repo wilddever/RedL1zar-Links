@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "jsx": "react-jsx",
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@workspace/api-client-react": ["src/cloudflare-api-client.ts"]
+    },
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["@cloudflare/workers-types", "vite/client"]
+  },
+  "include": [
+    "src/App.tsx",
+    "src/SecretSheepGame.tsx",
+    "src/cloudflare-api-client.ts",
+    "src/main.tsx",
+    "src/components/error-boundary.tsx",
+    "worker",
+    "vite.config.ts"
+  ]
+}

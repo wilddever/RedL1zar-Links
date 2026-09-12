@@ -14,3 +14,17 @@ mtime_ms = 1789211413069
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/c070fb6e-dc83-4827-8d10-09eaf05d64fd/83059a87-2d49-440f-a7cc-96b5c643fef0"
 storage_version_token = "1789211433289649"
 content_type = "image/svg+xml"
+
+[[outputs]]
+id = "lGIzOw1cwvuvm9NimbHFl"
+uri = "file://redl1zar-cloudflare.zip"
+type = "unspecified"
+title = "RedL1zar — Cloudflare deployment package"
+description = "Cloudflare Worker + React/Vite static site, API routes for Spotify, Steam, Yandex Music, Telegram, KV configuration, and Russian deployment instructions. Secrets are not included."
+logical_id = "db3ae121-10d2-4dea-96f4-e53b0222c493"
+content_hash = "sha256:fc296217dca128033288c3ee900d0ff87fe99f5910cc0d2112ac7b2850a4a478"
+size = 556033
+mtime_ms = 1789216493559
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/db3ae121-10d2-4dea-96f4-e53b0222c493/0bd4934f-3858-44a1-9429-29c677086160"
+storage_version_token = "1789216498530342"
+content_type = "application/octet-stream"
