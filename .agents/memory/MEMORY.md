@@ -3,3 +3,4 @@
 - [Workspace dependency installs](pnpm-workspace-install.md) — verify workspace config after pnpm adds a package because formatting and override keys may be rewritten.
 - [Yandex Music lookup](yandex-music-lookup.md) — the public API can return regional 451 responses; use the web search fallback for valid track metadata.
 - [Steam current-game detection](steam-current-game.md) — XML can omit currentGame while the public HTML profile still shows the active game.
+- [GitHub sync](github-sync.md) — Replit's Git pane connection may not provide credentials to shell `git push`; use project Git sync for the first push.
