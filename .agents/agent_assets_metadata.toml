@@ -56,3 +56,17 @@ mtime_ms = 1789397835680
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/0681b27c-1d9e-4d0e-be16-f4a4ae13d2b0/61b94ae1-2d62-43d0-b811-560ba44f3a71"
 storage_version_token = "1789397841677932"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "YWS6Qu6gzUu-0JMAbCtPD"
+uri = "file://deliverables/redl1zar-project-source.zip"
+type = "unspecified"
+title = "Архив проекта RedL1zar"
+description = "Полный безопасный архив проекта размером около 33 МБ: production frontend и Cloudflare API, оригинальная страница, API Server, mockup sandbox, shared libraries, исходные изображения, dist-сборки и конфигурация. Зависимости, кеши, git-история, логи и секреты исключены."
+logical_id = "8123ee91-087f-458e-ade0-00664a102177"
+content_hash = "sha256:b41a9935ae2a8aafbe8c85e1975153e18b00d508d7eeeb937f226c8b1a1dbe99"
+size = 34396913
+mtime_ms = 1789403386188
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/8123ee91-087f-458e-ade0-00664a102177/1c9feaa1-66c5-43a9-89c7-c929d3554b30"
+storage_version_token = "1789403401510410"
+content_type = "application/octet-stream"
