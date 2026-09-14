@@ -36,8 +36,15 @@ const runtimeApiBaseUrl =
 const apiBaseUrl = (
   import.meta.env.VITE_API_BASE_URL ?? runtimeApiBaseUrl
 ).replace(/\/+$/, '');
+const runtimeSpotifyCoverApiBaseUrl =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'xn--d1ax3b.fun' ||
+    window.location.hostname === 'рэд.fun')
+    ? 'https://red-l-1-zar-links.replit.app'
+    : '';
 const spotifyCoverApiBaseUrl = (
-  import.meta.env.VITE_SPOTIFY_COVER_API_BASE_URL ?? apiBaseUrl
+  import.meta.env.VITE_SPOTIFY_COVER_API_BASE_URL ??
+  (runtimeSpotifyCoverApiBaseUrl || apiBaseUrl)
 ).replace(/\/+$/, '');
 
 export function apiUrl(path: string) {

@@ -70,3 +70,17 @@ mtime_ms = 1789403386188
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/8123ee91-087f-458e-ade0-00664a102177/1c9feaa1-66c5-43a9-89c7-c929d3554b30"
 storage_version_token = "1789403401510410"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "VToj6JmLUguTA0sSJDI4T"
+uri = "file://deliverables/redl1zar-replit-cover-frontend.zip"
+type = "unspecified"
+title = "Frontend с Replit-прокси обложек"
+description = "Новая сборка cloudflare/dist: обложки на xn--d1ax3b.fun идут через уже существующий Replit API, без Cloudflare в пути изображения. Загрузите содержимое папки dist в VK Cloud Object Storage с заменой index.html и assets."
+logical_id = "29f58164-1b9c-4d42-bb76-d17896bf15f6"
+content_hash = "sha256:1746533f57ebbd32387afefcddba18276f0ea1e355038d4bfe919d439f299219"
+size = 573782
+mtime_ms = 1789409622239
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/29f58164-1b9c-4d42-bb76-d17896bf15f6/bc24cf5a-4418-411a-9745-bb9fb1ded687"
+storage_version_token = "1789409629633545"
+content_type = "application/octet-stream"

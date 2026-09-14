@@ -1,5 +1,10 @@
 # Прокси обложек для VK Cloud
 
+> Для текущего production frontend основной cover endpoint находится на уже
+> опубликованном Replit API Server: `https://red-l-1-zar-links.replit.app`.
+> Этот документ описывает исходную VK Cloud-схему и остаётся инструкцией для
+> отдельного VK backend, если он когда-нибудь понадобится.
+
 `api-server` уже содержит endpoint:
 
 ```text
