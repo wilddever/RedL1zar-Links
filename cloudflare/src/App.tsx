@@ -71,6 +71,7 @@ const playlists = [
 ];
 
 const YANDEX_404_URL = 'https://music.yandex.ru/404';
+const SPOTIFY_COVER_LOAD_TIMEOUT_MS = 6_000;
 
 const spotifyImageHosts = new Set([
   'i.scdn.co',
@@ -737,6 +738,7 @@ function NowPlaying() {
   const [state, setState] = useState<SpotifyCurrentlyPlaying | null>(null);
   const [yandexHref, setYandexHref] = useState(YANDEX_404_URL);
   const [coverFailed, setCoverFailed] = useState(false);
+  const coverTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -819,10 +821,36 @@ function NowPlaying() {
   const coverUrl = track?.imageUrl ? getSpotifyCoverUrl(track.imageUrl) : null;
   useEffect(() => {
     setCoverFailed(false);
+    if (coverTimeoutRef.current !== null) {
+      window.clearTimeout(coverTimeoutRef.current);
+      coverTimeoutRef.current = null;
+    }
+    if (coverUrl) {
+      coverTimeoutRef.current = window.setTimeout(() => {
+        setCoverFailed(true);
+        coverTimeoutRef.current = null;
+      }, SPOTIFY_COVER_LOAD_TIMEOUT_MS);
+    }
+    return () => {
+      if (coverTimeoutRef.current !== null) {
+        window.clearTimeout(coverTimeoutRef.current);
+        coverTimeoutRef.current = null;
+      }
+    };
   }, [coverUrl]);
 
   const handleCoverError = () => {
+    if (coverTimeoutRef.current !== null) {
+      window.clearTimeout(coverTimeoutRef.current);
+      coverTimeoutRef.current = null;
+    }
     setCoverFailed(true);
+  };
+  const handleCoverLoad = () => {
+    if (coverTimeoutRef.current !== null) {
+      window.clearTimeout(coverTimeoutRef.current);
+      coverTimeoutRef.current = null;
+    }
   };
   const renderCoverUrl = coverUrl && !coverFailed ? coverUrl : null;
   const statusLabel =
@@ -860,6 +888,7 @@ function NowPlaying() {
               draggable={false}
               loading="eager"
               onError={handleCoverError}
+              onLoad={handleCoverLoad}
               onContextMenu={preventImageContextMenu}
             />
           ) : (
@@ -875,6 +904,7 @@ function NowPlaying() {
               fetchPriority="high"
               loading="eager"
               onError={handleCoverError}
+              onLoad={handleCoverLoad}
               onContextMenu={preventImageContextMenu}
             />
           ) : (

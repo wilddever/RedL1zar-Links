@@ -28,3 +28,17 @@ mtime_ms = 1789216493559
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/db3ae121-10d2-4dea-96f4-e53b0222c493/0bd4934f-3858-44a1-9429-29c677086160"
 storage_version_token = "1789216498530342"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "s_Fej5AILbovjzUXUrM_S"
+uri = "file://deliverables/redl1zar-vk-frontend.zip"
+type = "unspecified"
+title = "Frontend-сборка для VK Cloud"
+description = "Загрузите содержимое архива в bucket redl1zar-site-vk с заменой index.html и каталога assets/. Сборка содержит таймаут обложек Spotify и локальный fallback при зависшей загрузке."
+logical_id = "06a269e7-e988-40ec-8068-d0538637882f"
+content_hash = "sha256:af53f3c6f92337d86c41f3916151d9d7c95d19bf593bf5c8090149c26d080ce0"
+size = 573326
+mtime_ms = 1789396003083
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/06a269e7-e988-40ec-8068-d0538637882f/9029d921-ef71-4530-bfdd-3132b304669d"
+storage_version_token = "1789396008704512"
+content_type = "application/octet-stream"
