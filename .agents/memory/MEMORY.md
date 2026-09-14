@@ -7,4 +7,5 @@
 - [Steam current-game detection](steam-current-game.md) — XML can omit currentGame while the public HTML profile still shows the active game.
 - [GitHub sync](github-sync.md) — Replit's Git pane connection may not provide credentials to shell `git push`; use project Git sync for the first push.
 - [Frontend browser regression checks](frontend-browser-regression.md) — proxy API routes and start each frontend with its own Vite command when testing shared browser behavior.
+- [API CORS origins](api-cors-origins.md) — VK Cloud currently serves both HTTP and HTTPS, so the API must allow both origins until HTTPS-only access is enforced.
 - [Spotify cover delivery](spotify-cover-delivery.md) — serve the cached proxy URL directly to img elements; avoid a second fetch-to-Blob pipeline in the browser.

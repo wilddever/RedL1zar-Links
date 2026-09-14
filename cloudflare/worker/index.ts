@@ -116,6 +116,9 @@ function getCorsOrigin(request: Request, env: Env) {
   if (!origin) return null;
   const allowedOrigins = new Set([
     getPublicAppOrigin(env),
+    'http://xn--d1ax3b.fun',
+    'https://рэд.fun',
+    'http://рэд.fun',
     'http://localhost:5173',
     'http://localhost:8787',
   ]);
