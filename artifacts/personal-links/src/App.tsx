@@ -638,6 +638,7 @@ function NowPlaying() {
   const [yandexHref, setYandexHref] = useState(YANDEX_404_URL);
   const [coverFailed, setCoverFailed] = useState(false);
   const [liquidCoverFailed, setLiquidCoverFailed] = useState(false);
+  const [coverObjectUrl, setCoverObjectUrl] = useState<string | null>(null);
   const coverTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -720,23 +721,57 @@ function NowPlaying() {
 
   const coverUrl = track?.imageUrl ? getSpotifyCoverUrl(track.imageUrl) : null;
   useEffect(() => {
+    let active = true;
+    let loadedObjectUrl: string | null = null;
+    const controller = new AbortController();
+
     setCoverFailed(false);
     setLiquidCoverFailed(false);
+    setCoverObjectUrl(null);
     if (coverTimeoutRef.current !== null) {
       window.clearTimeout(coverTimeoutRef.current);
       coverTimeoutRef.current = null;
     }
     if (coverUrl) {
       coverTimeoutRef.current = window.setTimeout(() => {
+        controller.abort();
         setCoverFailed(true);
+        setCoverObjectUrl(null);
         coverTimeoutRef.current = null;
       }, SPOTIFY_COVER_LOAD_TIMEOUT_MS);
+
+      fetch(coverUrl, { cache: 'force-cache', signal: controller.signal })
+        .then((response) => {
+          if (!response.ok) throw new Error(`Spotify cover request failed: ${response.status}`);
+          return response.blob();
+        })
+        .then((blob) => {
+          if (!active) return;
+          loadedObjectUrl = URL.createObjectURL(blob);
+          if (coverTimeoutRef.current !== null) {
+            window.clearTimeout(coverTimeoutRef.current);
+            coverTimeoutRef.current = null;
+          }
+          setCoverObjectUrl(loadedObjectUrl);
+        })
+        .catch(() => {
+          if (!active) return;
+          if (coverTimeoutRef.current !== null) {
+            window.clearTimeout(coverTimeoutRef.current);
+            coverTimeoutRef.current = null;
+          }
+          setCoverFailed(true);
+        });
     }
+
     return () => {
+      active = false;
+      controller.abort();
       if (coverTimeoutRef.current !== null) {
         window.clearTimeout(coverTimeoutRef.current);
         coverTimeoutRef.current = null;
       }
+      if (loadedObjectUrl) URL.revokeObjectURL(loadedObjectUrl);
     };
   }, [coverUrl]);
 
@@ -759,9 +794,9 @@ function NowPlaying() {
   const handleLiquidCoverLoad = () => {
     setLiquidCoverFailed(false);
   };
-  const renderCoverUrl = coverUrl && !coverFailed ? coverUrl : null;
+  const renderCoverUrl = coverObjectUrl && !coverFailed ? coverObjectUrl : null;
   const renderLiquidCoverUrl =
-    coverUrl && !coverFailed && !liquidCoverFailed ? coverUrl : null;
+    coverObjectUrl && !coverFailed && !liquidCoverFailed ? coverObjectUrl : null;
   const statusLabel =
     state?.status === 'playing'
       ? 'now playing'
