@@ -736,6 +736,7 @@ function SendView() {
 function NowPlaying() {
   const [state, setState] = useState<SpotifyCurrentlyPlaying | null>(null);
   const [yandexHref, setYandexHref] = useState(YANDEX_404_URL);
+  const [coverFailed, setCoverFailed] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -816,6 +817,14 @@ function NowPlaying() {
   }, [track?.album, track?.artist, track?.title]);
 
   const coverUrl = track?.imageUrl ? getSpotifyCoverUrl(track.imageUrl) : null;
+  useEffect(() => {
+    setCoverFailed(false);
+  }, [coverUrl]);
+
+  const handleCoverError = () => {
+    setCoverFailed(true);
+  };
+  const renderCoverUrl = coverUrl && !coverFailed ? coverUrl : null;
   const statusLabel =
     state?.status === 'playing'
       ? 'now playing'
@@ -841,24 +850,31 @@ function NowPlaying() {
         <div
           className="now-playing-card"
         >
-          {coverUrl ? (
+          {renderCoverUrl ? (
             <img
               className="now-playing-liquid-art"
-              src={coverUrl}
+              src={renderCoverUrl}
               alt=""
               aria-hidden="true"
+              decoding="async"
               draggable={false}
+              loading="eager"
+              onError={handleCoverError}
               onContextMenu={preventImageContextMenu}
             />
           ) : (
             <span className="now-playing-liquid-fallback" aria-hidden="true" />
           )}
-          {track.imageUrl ? (
+          {renderCoverUrl ? (
             <img
               className="now-playing-art"
-              src={getSpotifyCoverUrl(track.imageUrl)}
+              src={renderCoverUrl}
               alt={`Обложка альбома «${track.album}»`}
+              decoding="async"
               draggable={false}
+              fetchPriority="high"
+              loading="eager"
+              onError={handleCoverError}
               onContextMenu={preventImageContextMenu}
             />
           ) : (

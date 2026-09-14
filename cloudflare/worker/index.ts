@@ -964,6 +964,10 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
     if (!imageUrl) return text('Недопустимый адрес обложки Spotify.', 400);
     try {
       const upstream = await fetchWithTimeout(imageUrl, {
+        cf: {
+          cacheEverything: true,
+          cacheTtl: 86_400,
+        },
         headers: { Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8' },
         redirect: 'follow',
       });
@@ -976,7 +980,8 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
       }
       return new Response(body, {
         headers: {
-          'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
+          'Cache-Control':
+            'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=86400',
           'Content-Type': contentType,
           'X-Content-Type-Options': 'nosniff',
         },

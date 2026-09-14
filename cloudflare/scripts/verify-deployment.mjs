@@ -17,6 +17,8 @@ const configPath = path.resolve(
   process.env.WRANGLER_CONFIG || path.join(scriptDirectory, '..', 'wrangler.toml'),
 );
 const expectedAppOrigin = 'https://xn--d1ax3b.fun';
+const smokeTestSpotifyImage =
+  'https://i.scdn.co/image/ab67616d0000b273571cd5cb21a8f4fc16d992d3';
 const requestTimeoutMs = 15_000;
 
 function readTomlString(source, key, section = '') {
@@ -191,6 +193,31 @@ await assertGet(
   },
 );
 
+const coverUrl = `${apiOrigin}/api/spotify/cover?url=${encodeURIComponent(
+  smokeTestSpotifyImage,
+)}`;
+const coverResponse = await fetchWithTimeout(coverUrl, {
+  headers: {
+    Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+    Origin: appOrigin,
+  },
+  cache: 'no-store',
+});
+assertCors(coverResponse, coverUrl, appOrigin);
+if (!coverResponse.ok) {
+  fail(`${coverUrl} вернул HTTP ${coverResponse.status}, ожидалась доступная обложка.`);
+}
+if (!coverResponse.headers.get('content-type')?.startsWith('image/')) {
+  fail(
+    `${coverUrl} вернул неожиданный Content-Type: ${JSON.stringify(
+      coverResponse.headers.get('content-type'),
+    )}.`,
+  );
+}
+if (!coverResponse.headers.get('cache-control')?.includes('s-maxage=86400')) {
+  fail(`${coverUrl} не содержит edge-кеширование на 24 часа.`);
+}
+
 const preflightUrl = `${apiOrigin}/api/send`;
 const preflight = await fetchWithTimeout(preflightUrl, {
   method: 'OPTIONS',
@@ -218,5 +245,5 @@ assertAllowedValues(
 );
 
 console.log(
-  `Cloudflare deployment проверен: Worker ${workerName}, ${apiOrigin}, CORS и OPTIONS /api/send работают.`,
+  `Cloudflare deployment проверен: Worker ${workerName}, ${apiOrigin}, CORS, Spotify cover и OPTIONS /api/send работают.`,
 );
