@@ -1,4 +1,4 @@
-name = "redl1zar-personal-links"
+name = "redl1zar-links"
 main = "worker/index.ts"
 compatibility_date = "2026-09-12"
 
@@ -9,6 +9,10 @@ not_found_handling = "single-page-application"
 
 [vars]
 PUBLIC_APP_ORIGIN = "https://xn--d1ax3b.fun"
+
+[[routes]]
+pattern = "api.xn--d1ax3b.fun"
+custom_domain = true
 
 [[kv_namespaces]]
 binding = "SPOTIFY_KV"
