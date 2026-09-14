@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-09-14T16:17:25.070Z",
+  "source": "https://check-host.net/nodes/hosts",
+  "totalNodes": 56,
+  "russianNodes": {
+    "ru2.node.check-host.net": {
+      "asn": "AS210644",
+      "ip": "194.26.229.20",
+      "location": [
+        "ru",
+        "Russia",
+        "Moscow"
+      ]
+    },
+    "ru3.node.check-host.net": {
+      "asn": "AS210644",
+      "ip": "185.221.199.82",
+      "location": [
+        "ru",
+        "Russia",
+        "Saint Petersburg"
+      ]
+    }
+  },
+  "khmaoMatches": []
+}

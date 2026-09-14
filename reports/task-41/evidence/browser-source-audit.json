@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-09-14T16:17:53.027Z",
+  "source": "https://www.browserling.com/browse?url=https%3A%2F%2Fxn--d1ax3b.fun%2F",
+  "httpStatus": 200,
+  "contentType": "text/html; charset=UTF-8",
+  "title": "Browserling – Online Windows 10 Sandbox",
+  "session": {
+    "plan": "free",
+    "platform": "win/10",
+    "browser": "chrome/138",
+    "requestedUrl": "https://xn--d1ax3b.fun/"
+  },
+  "location": {
+    "confirmed": false,
+    "city": null,
+    "region": null,
+    "country": null,
+    "vpnUsed": false
+  },
+  "reasonNotAccepted": [
+    "The public response exposes a remote browser session but no independently verifiable Khanty-Mansiysk or Surgut egress.",
+    "The page offers generic proxy/VPN location controls; selecting a country or proxy would not prove a native browser point in Khanty-Mansiysk or Surgut.",
+    "The free session is not a 30-minute measurement source."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "startedAt": "2026-09-14T16:17:37.236Z",
+  "endedAt": "2026-09-14T16:17:42.577Z",
+  "measurementType": "http-only",
+  "nodes": {
+    "ru2.node.check-host.net": {
+      "location": "Moscow",
+      "ip": "194.26.229.20",
+      "asn": "AS210644"
+    },
+    "ru3.node.check-host.net": {
+      "location": "Saint Petersburg",
+      "ip": "185.221.199.82",
+      "asn": "AS210644"
+    }
+  },
+  "targets": {
+    "frontend": {
+      "url": "https://xn--d1ax3b.fun/",
+      "status": {
+        "ru2.node.check-host.net": 200,
+        "ru3.node.check-host.net": 200
+      },
+      "elapsedMs": {
+        "ru2.node.check-host.net": 294.09384727478,
+        "ru3.node.check-host.net": 149.209976196289
+      }
+    },
+    "api-health": {
+      "url": "https://api.xn--d1ax3b.fun/api/healthz",
+      "status": {
+        "ru2.node.check-host.net": 200,
+        "ru3.node.check-host.net": 200
+      },
+      "elapsedMs": {
+        "ru2.node.check-host.net": 158.14304351806598,
+        "ru3.node.check-host.net": 229.866027832031
+      }
+    },
+    "cover": {
+      "url": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273571cd5cb21a8f4fc16d992d3",
+      "status": {
+        "ru2.node.check-host.net": 200,
+        "ru3.node.check-host.net": 200
+      },
+      "elapsedMs": {
+        "ru2.node.check-host.net": 331.591129302979,
+        "ru3.node.check-host.net": 370.228052139282
+      }
+    }
+  }
+}
