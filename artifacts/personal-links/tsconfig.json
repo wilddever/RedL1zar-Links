@@ -11,7 +11,8 @@
     "moduleResolution": "bundler",
     "types": ["node", "vite/client"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@workspace/spotify-cover": ["../../lib/spotify-cover/src/index.ts"]
     }
   },
   "references": [

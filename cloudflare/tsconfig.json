@@ -15,6 +15,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
+      "@workspace/spotify-cover": ["../lib/spotify-cover/src/index.ts"],
       "@workspace/api-client-react": ["src/cloudflare-api-client.ts"]
     },
     "resolveJsonModule": true,

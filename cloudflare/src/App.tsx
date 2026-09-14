@@ -8,6 +8,7 @@ import {
   type SteamCurrentlyPlaying,
   type SpotifyCurrentlyPlaying,
 } from '@workspace/api-client-react';
+import { useSpotifyCoverObjectUrl } from '@workspace/spotify-cover';
 import rztLogo from '../attached_assets/photo_2026-01-18_13-43-45_1789144600817.jpg';
 import roadSign from '../attached_assets/Picsart_26-09-11_21-29-09-376_1789144606943.png';
 import yandexMusicLogo from '../attached_assets/изображение_1789152023645.png';
@@ -71,7 +72,6 @@ const playlists = [
 ];
 
 const YANDEX_404_URL = 'https://music.yandex.ru/404';
-const SPOTIFY_COVER_LOAD_TIMEOUT_MS = 6_000;
 
 const spotifyImageHosts = new Set([
   'i.scdn.co',
@@ -737,10 +737,7 @@ function SendView() {
 function NowPlaying() {
   const [state, setState] = useState<SpotifyCurrentlyPlaying | null>(null);
   const [yandexHref, setYandexHref] = useState(YANDEX_404_URL);
-  const [coverFailed, setCoverFailed] = useState(false);
   const [liquidCoverFailed, setLiquidCoverFailed] = useState(false);
-  const [coverObjectUrl, setCoverObjectUrl] = useState<string | null>(null);
-  const coverTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -821,74 +818,15 @@ function NowPlaying() {
   }, [track?.album, track?.artist, track?.title]);
 
   const coverUrl = track?.imageUrl ? getSpotifyCoverUrl(track.imageUrl) : null;
+  const {
+    objectUrl: coverObjectUrl,
+    failed: coverFailed,
+    handleError: handleCoverError,
+    handleLoad: handleCoverLoad,
+  } = useSpotifyCoverObjectUrl(coverUrl);
   useEffect(() => {
-    let active = true;
-    let loadedObjectUrl: string | null = null;
-    const controller = new AbortController();
-
-    setCoverFailed(false);
     setLiquidCoverFailed(false);
-    setCoverObjectUrl(null);
-    if (coverTimeoutRef.current !== null) {
-      window.clearTimeout(coverTimeoutRef.current);
-      coverTimeoutRef.current = null;
-    }
-    if (coverUrl) {
-      coverTimeoutRef.current = window.setTimeout(() => {
-        controller.abort();
-        setCoverFailed(true);
-        setCoverObjectUrl(null);
-        coverTimeoutRef.current = null;
-      }, SPOTIFY_COVER_LOAD_TIMEOUT_MS);
-
-      fetch(coverUrl, { cache: 'force-cache', signal: controller.signal })
-        .then((response) => {
-          if (!response.ok) throw new Error(`Spotify cover request failed: ${response.status}`);
-          return response.blob();
-        })
-        .then((blob) => {
-          if (!active) return;
-          loadedObjectUrl = URL.createObjectURL(blob);
-          if (coverTimeoutRef.current !== null) {
-            window.clearTimeout(coverTimeoutRef.current);
-            coverTimeoutRef.current = null;
-          }
-          setCoverObjectUrl(loadedObjectUrl);
-        })
-        .catch(() => {
-          if (!active) return;
-          if (coverTimeoutRef.current !== null) {
-            window.clearTimeout(coverTimeoutRef.current);
-            coverTimeoutRef.current = null;
-          }
-          setCoverFailed(true);
-        });
-    }
-
-    return () => {
-      active = false;
-      controller.abort();
-      if (coverTimeoutRef.current !== null) {
-        window.clearTimeout(coverTimeoutRef.current);
-        coverTimeoutRef.current = null;
-      }
-      if (loadedObjectUrl) URL.revokeObjectURL(loadedObjectUrl);
-    };
   }, [coverUrl]);
-
-  const handleCoverError = () => {
-    if (coverTimeoutRef.current !== null) {
-      window.clearTimeout(coverTimeoutRef.current);
-      coverTimeoutRef.current = null;
-    }
-    setCoverFailed(true);
-  };
-  const handleCoverLoad = () => {
-    if (coverTimeoutRef.current !== null) {
-      window.clearTimeout(coverTimeoutRef.current);
-      coverTimeoutRef.current = null;
-    }
-  };
   const handleLiquidCoverError = () => {
     setLiquidCoverFailed(true);
   };
