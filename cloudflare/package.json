@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "deploy": "npm run build && wrangler deploy"
+    "verify:deployment": "node scripts/verify-deployment.mjs",
+    "deploy": "npm run build && wrangler deploy --config wrangler.toml && npm run verify:deployment"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.15",

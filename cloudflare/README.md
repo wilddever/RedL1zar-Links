@@ -130,8 +130,14 @@ https://YOUR-DOMAIN.example/api/spotify/callback
 npm install
 npm run typecheck
 npm run build
-npx wrangler deploy
+npm run deploy
 ```
+
+`npm run deploy` после публикации автоматически проверяет Worker из
+`wrangler.toml`: наличие deployment, ответ `/api/healthz`, CORS у GET-запросов
+и preflight `OPTIONS /api/send`. Реальный `POST /api/send` и сообщение в
+Telegram при этой проверке не выполняются. Если проверка не проходит, команда
+завершается с ошибкой.
 
 После публикации Wrangler покажет адрес вида `*.workers.dev`.
 
