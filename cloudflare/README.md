@@ -12,10 +12,10 @@
 ## Рекомендуемая схема для пользователей из России
 
 Чтобы не отдавать первый экран через Cloudflare, frontend можно разместить в
-Yandex Cloud, а Worker оставить API:
+VK Cloud Object Storage/CDN, а Worker оставить API:
 
 ```text
-https://xn--d1ax3b.fun       → Yandex Cloud CDN / Object Storage
+https://xn--d1ax3b.fun       → VK Cloud CDN / Object Storage
 https://api.xn--d1ax3b.fun   → Cloudflare Worker
 ```
 
@@ -45,21 +45,24 @@ https://api.xn--d1ax3b.fun/api/spotify/callback
 
 И обновите production secret `SPOTIFY_REDIRECT_URI` тем же значением.
 
-### 2. Создать frontend в Yandex Cloud
+### 2. Загрузить frontend в VK Cloud
 
-В Yandex Cloud:
+В VK Cloud:
 
-1. Создайте bucket Object Storage с именем, которое сможете использовать как
-   origin для CDN.
-2. Загрузите содержимое каталога `dist/` после команды `npm run build`.
-3. Создайте ресурс Yandex Cloud CDN с bucket как origin.
+1. Создайте bucket в VK Cloud Object Storage и включите публичное чтение
+   объектов либо настройте CDN-origin с доступом к bucket.
+2. Выполните `npm run build`, затем загрузите **содержимое** каталога `dist/`
+   в корень bucket. Файл должен находиться как `index.html`, а не
+   `dist/index.html`; каталог `assets/` загрузите целиком.
+3. Создайте ресурс VK Cloud CDN с bucket как origin и включите отдачу
+   `index.html` для корневого URL.
 4. Добавьте к CDN custom domain `xn--d1ax3b.fun`.
 5. Выпустите или подключите TLS-сертификат для `xn--d1ax3b.fun`.
-6. В DNS Cloudflare добавьте запись, которую выдаст Yandex CDN, для корневого
+6. В DNS Cloudflare добавьте запись, которую выдаст VK Cloud CDN, для корневого
    домена и оставьте её **DNS only**, без проксирования Cloudflare.
 
-До переключения DNS проверьте CDN на выданном Yandex тестовом адресе. После
-переключения `https://xn--d1ax3b.fun` должен отдавать `dist/index.html`, а
+До переключения DNS проверьте CDN на выданном VK Cloud тестовом адресе. После
+переключения `https://xn--d1ax3b.fun` должен отдавать `index.html`, а
 запросы frontend к `/api/*` будут уходить на `api.xn--d1ax3b.fun`.
 
 Для хешированных файлов из `dist/assets/` установите в CDN длительный cache:
@@ -70,6 +73,29 @@ Cache-Control: public, max-age=31536000, immutable
 
 Для `index.html` оставьте короткий cache или revalidation, чтобы новые версии
 сайта появлялись сразу после загрузки.
+
+После загрузки frontend и переключения DNS выполните обязательную внешнюю
+проверку из каталога `cloudflare`:
+
+```bash
+npm run verify:deployment
+```
+
+Проверка использует российские узлы Check-Host (по умолчанию Москва и
+Санкт-Петербург) и дважды запрашивает корневой сайт, API и `/api/spotify/cover`:
+первый запрос прогревает кеш, второй проверяет HTTP 200 и время ответа.
+Дополнительно она проверяет `Content-Type: image/*` у обложки и сравнивает
+хешированные JS/CSS-файлы live `index.html` с только что собранной `dist/`.
+Поэтому запускайте её **после** загрузки текущей `dist/` в VK Cloud: старый
+frontend или устаревший asset hash остановит публикацию с ошибкой.
+
+Если нужны другие доступные российские узлы или другой предел времени ответа:
+
+```bash
+RUSSIAN_PROBE_NODES=ru2.node.check-host.net,ru3.node.check-host.net \
+RUSSIAN_PROBE_MAX_RESPONSE_MS=5000 \
+npm run verify:deployment
+```
 
 Секреты в архив не включены. Их нужно добавить через `wrangler secret put`.
 
