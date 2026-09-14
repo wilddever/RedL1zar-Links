@@ -637,6 +637,7 @@ function NowPlaying() {
   const [state, setState] = useState<SpotifyCurrentlyPlaying | null>(null);
   const [yandexHref, setYandexHref] = useState(YANDEX_404_URL);
   const [coverFailed, setCoverFailed] = useState(false);
+  const [liquidCoverFailed, setLiquidCoverFailed] = useState(false);
   const coverTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -720,6 +721,7 @@ function NowPlaying() {
   const coverUrl = track?.imageUrl ? getSpotifyCoverUrl(track.imageUrl) : null;
   useEffect(() => {
     setCoverFailed(false);
+    setLiquidCoverFailed(false);
     if (coverTimeoutRef.current !== null) {
       window.clearTimeout(coverTimeoutRef.current);
       coverTimeoutRef.current = null;
@@ -751,7 +753,15 @@ function NowPlaying() {
       coverTimeoutRef.current = null;
     }
   };
+  const handleLiquidCoverError = () => {
+    setLiquidCoverFailed(true);
+  };
+  const handleLiquidCoverLoad = () => {
+    setLiquidCoverFailed(false);
+  };
   const renderCoverUrl = coverUrl && !coverFailed ? coverUrl : null;
+  const renderLiquidCoverUrl =
+    coverUrl && !coverFailed && !liquidCoverFailed ? coverUrl : null;
   const statusLabel =
     state?.status === 'playing'
       ? 'now playing'
@@ -777,17 +787,17 @@ function NowPlaying() {
         <div
           className="now-playing-card"
         >
-          {renderCoverUrl ? (
+          {renderLiquidCoverUrl ? (
             <img
               className="now-playing-liquid-art"
-              src={renderCoverUrl}
+              src={renderLiquidCoverUrl}
               alt=""
               aria-hidden="true"
               decoding="async"
               draggable={false}
               loading="eager"
-              onError={handleCoverError}
-              onLoad={handleCoverLoad}
+              onError={handleLiquidCoverError}
+              onLoad={handleLiquidCoverLoad}
               onContextMenu={preventImageContextMenu}
             />
           ) : (

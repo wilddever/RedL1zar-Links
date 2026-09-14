@@ -42,3 +42,17 @@ mtime_ms = 1789396003083
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/06a269e7-e988-40ec-8068-d0538637882f/9029d921-ef71-4530-bfdd-3132b304669d"
 storage_version_token = "1789396008704512"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "FHW6kEj-htdVowQwOQ4Jz"
+uri = "file://deliverables/redl1zar-vk-frontend-fix.zip"
+type = "unspecified"
+title = "Исправленная frontend-сборка для VK Cloud"
+description = "Загрузите содержимое архива в bucket redl1zar-site-vk: замените index.html и каталог assets/. Новый JS: index-DFk8pNyr.js. Исправлена ошибка, при которой сбой фоновой копии обложки скрывал рабочую основную обложку."
+logical_id = "0681b27c-1d9e-4d0e-be16-f4a4ae13d2b0"
+content_hash = "sha256:2d0fa695413d2974155290f087744579805ba30c196aa92e97d3404036a834c5"
+size = 573352
+mtime_ms = 1789397835680
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/0681b27c-1d9e-4d0e-be16-f4a4ae13d2b0/61b94ae1-2d62-43d0-b811-560ba44f3a71"
+storage_version_token = "1789397841677932"
+content_type = "application/octet-stream"
