@@ -65,6 +65,9 @@ const YANDEX_WEB_SEARCH_URL = 'https://music.yandex.ru/search';
 const STEAM_PROFILE_URL = 'https://steamcommunity.com/id/RedL1zar?xml=1';
 const STEAM_PROFILE_HTML_URL = 'https://steamcommunity.com/id/RedL1zar';
 const encoder = new TextEncoder();
+const SPOTIFY_COVER_CACHE_TTL_SECONDS = 86_400;
+const SPOTIFY_COVER_MAX_BYTES = 5 * 1024 * 1024;
+const SPOTIFY_COVER_RETRY_DELAY_MS = 150;
 
 let accessTokenCache: { accessToken: string; expiresAt: number } | undefined;
 let refreshInFlight: Promise<string | null> | undefined;
@@ -147,6 +150,52 @@ async function fetchWithTimeout(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function getSpotifyCoverCacheKey(request: Request, imageUrl: string) {
+  const cacheUrl = new URL('/api/spotify/cover', request.url);
+  cacheUrl.searchParams.set('url', imageUrl);
+  return new Request(cacheUrl.toString(), { method: 'GET' });
+}
+
+function getEdgeCache() {
+  return (caches as unknown as { default: Cache }).default;
+}
+
+async function fetchSpotifyCover(imageUrl: string) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await fetchWithTimeout(imageUrl, {
+        cf: {
+          cacheEverything: true,
+          cacheTtl: SPOTIFY_COVER_CACHE_TTL_SECONDS,
+        },
+        headers: {
+          Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        },
+        redirect: 'follow',
+      });
+
+      if (
+        response.ok ||
+        response.status === 404 ||
+        (response.status < 500 && response.status !== 429) ||
+        attempt === 1
+      ) {
+        return response;
+      }
+
+      await response.body?.cancel();
+    } catch (error) {
+      if (attempt === 1) throw error;
+    }
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, SPOTIFY_COVER_RETRY_DELAY_MS),
+    );
+  }
+
+  throw new Error('Spotify cover request failed after retry');
 }
 
 function getConfig(env: Env): SpotifyConfig | null {
@@ -828,7 +877,11 @@ async function findYandexTrack(title: string, artist: string, album?: string) {
   }
 }
 
-async function handleApi(request: Request, env: Env): Promise<Response> {
+async function handleApi(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
   const url = new URL(request.url);
   if (request.method === 'OPTIONS') {
     return new Response(null, {
@@ -962,23 +1015,21 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
   if (url.pathname === '/api/spotify/cover' && request.method === 'GET') {
     const imageUrl = getAllowedSpotifyImageUrl(url.searchParams.get('url') || '');
     if (!imageUrl) return text('Недопустимый адрес обложки Spotify.', 400);
+    const cacheKey = getSpotifyCoverCacheKey(request, imageUrl.toString());
+    const edgeCache = getEdgeCache();
+    const cached = await edgeCache.match(cacheKey);
+    if (cached) return cached;
+
     try {
-      const upstream = await fetchWithTimeout(imageUrl, {
-        cf: {
-          cacheEverything: true,
-          cacheTtl: 86_400,
-        },
-        headers: { Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8' },
-        redirect: 'follow',
-      });
+      const upstream = await fetchSpotifyCover(imageUrl.toString());
       if (!upstream.ok) return new Response(null, { status: upstream.status === 404 ? 404 : 502 });
       const resolvedUrl = getAllowedSpotifyImageUrl(upstream.url);
       const contentType = upstream.headers.get('content-type')?.split(';')[0] || '';
       const body = await upstream.arrayBuffer();
-      if (!resolvedUrl || !contentType.startsWith('image/') || body.byteLength > 5 * 1024 * 1024) {
+      if (!resolvedUrl || !contentType.startsWith('image/') || body.byteLength > SPOTIFY_COVER_MAX_BYTES) {
         return new Response(null, { status: 502 });
       }
-      return new Response(body, {
+      const response = new Response(body, {
         headers: {
           'Cache-Control':
             'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=86400',
@@ -986,6 +1037,8 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
           'X-Content-Type-Options': 'nosniff',
         },
       });
+      ctx.waitUntil(edgeCache.put(cacheKey, response.clone()));
+      return response;
     } catch {
       return new Response(null, { status: 502 });
     }
@@ -1052,13 +1105,13 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
 }
 
 export default {
-  async fetch(request: Request, env: Env) {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const url = new URL(request.url);
     if (url.pathname.startsWith('/api/')) {
       if (request.method === 'OPTIONS') {
         return withCors(new Response(null, { status: 204 }), request, env);
       }
-      return withCors(await handleApi(request, env), request, env);
+      return withCors(await handleApi(request, env, ctx), request, env);
     }
     return env.ASSETS.fetch(request);
   },

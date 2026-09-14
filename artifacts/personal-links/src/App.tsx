@@ -7,7 +7,7 @@ import {
   type SteamCurrentlyPlaying,
   type SpotifyCurrentlyPlaying,
 } from '@workspace/api-client-react';
-import { useSpotifyCoverObjectUrl } from '@workspace/spotify-cover';
+import { useSpotifyCover } from '@workspace/spotify-cover';
 import rztLogo from '../../../attached_assets/photo_2026-01-18_13-43-45_1789144600817.jpg';
 import roadSign from '../../../attached_assets/Picsart_26-09-11_21-29-09-376_1789144606943.png';
 import yandexMusicLogo from '../../../attached_assets/изображение_1789152023645.png';
@@ -723,11 +723,11 @@ function NowPlaying() {
 
   const coverUrl = track?.imageUrl ? getSpotifyCoverUrl(track.imageUrl) : null;
   const {
-    objectUrl: coverObjectUrl,
+    imageUrl: coverImageUrl,
     failed: coverFailed,
     handleError: handleCoverError,
     handleLoad: handleCoverLoad,
-  } = useSpotifyCoverObjectUrl(coverUrl);
+  } = useSpotifyCover(coverUrl);
   useEffect(() => {
     setLiquidCoverFailed(false);
   }, [coverUrl]);
@@ -737,9 +737,9 @@ function NowPlaying() {
   const handleLiquidCoverLoad = () => {
     setLiquidCoverFailed(false);
   };
-  const renderCoverUrl = coverObjectUrl && !coverFailed ? coverObjectUrl : null;
+  const renderCoverUrl = coverImageUrl && !coverFailed ? coverImageUrl : null;
   const renderLiquidCoverUrl =
-    coverObjectUrl && !coverFailed && !liquidCoverFailed ? coverObjectUrl : null;
+    coverImageUrl && !coverFailed && !liquidCoverFailed ? coverImageUrl : null;
   const statusLabel =
     state?.status === 'playing'
       ? 'now playing'
