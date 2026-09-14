@@ -823,7 +823,6 @@ function NowPlaying() {
   const coverUrl = track?.imageUrl ? getSpotifyCoverUrl(track.imageUrl) : null;
   const {
     imageUrl: coverImageUrl,
-    failed: coverFailed,
     handleError: handleCoverError,
     handleLoad: handleCoverLoad,
   } = useSpotifyCover(coverUrl);
@@ -836,9 +835,9 @@ function NowPlaying() {
   const handleLiquidCoverLoad = () => {
     setLiquidCoverFailed(false);
   };
-  const renderCoverUrl = coverImageUrl && !coverFailed ? coverImageUrl : null;
+  const renderCoverUrl = coverImageUrl;
   const renderLiquidCoverUrl =
-    coverImageUrl && !coverFailed && !liquidCoverFailed ? coverImageUrl : null;
+    coverImageUrl && !liquidCoverFailed ? coverImageUrl : null;
   const statusLabel =
     state?.status === 'playing'
       ? 'now playing'
