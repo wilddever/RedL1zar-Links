@@ -5,6 +5,7 @@ import {
   getCurrentSteamGame,
   getCurrentSpotifyTrack,
   apiUrl,
+  spotifyCoverApiUrl,
   type SteamCurrentlyPlaying,
   type SpotifyCurrentlyPlaying,
 } from '@workspace/api-client-react';
@@ -86,7 +87,9 @@ function getSpotifyCoverUrl(imageUrl: string): string {
     if (url.protocol !== 'https:' || !spotifyImageHosts.has(url.hostname)) {
       return imageUrl;
     }
-    return apiUrl(`/api/spotify/cover?url=${encodeURIComponent(url.toString())}`);
+    return spotifyCoverApiUrl(
+      `/api/spotify/cover?url=${encodeURIComponent(url.toString())}`,
+    );
   } catch {
     return imageUrl;
   }

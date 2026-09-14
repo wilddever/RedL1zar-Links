@@ -36,9 +36,16 @@ const runtimeApiBaseUrl =
 const apiBaseUrl = (
   import.meta.env.VITE_API_BASE_URL ?? runtimeApiBaseUrl
 ).replace(/\/+$/, '');
+const spotifyCoverApiBaseUrl = (
+  import.meta.env.VITE_SPOTIFY_COVER_API_BASE_URL ?? apiBaseUrl
+).replace(/\/+$/, '');
 
 export function apiUrl(path: string) {
   return `${apiBaseUrl}${path}`;
+}
+
+export function spotifyCoverApiUrl(path: string) {
+  return `${spotifyCoverApiBaseUrl}${path}`;
 }
 
 async function getJson<T>(

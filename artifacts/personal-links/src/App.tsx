@@ -78,6 +78,9 @@ const spotifyImageHosts = new Set([
   'image-cdn-ak.spotifycdn.com',
   'image-cdn-fa.spotifycdn.com',
 ]);
+const spotifyCoverApiBaseUrl = (
+  import.meta.env.VITE_SPOTIFY_COVER_API_BASE_URL ?? ''
+).replace(/\/+$/, '');
 
 function getSpotifyCoverUrl(imageUrl: string): string {
   try {
@@ -85,7 +88,9 @@ function getSpotifyCoverUrl(imageUrl: string): string {
     if (url.protocol !== 'https:' || !spotifyImageHosts.has(url.hostname)) {
       return imageUrl;
     }
-    return `/api/spotify/cover?url=${encodeURIComponent(url.toString())}`;
+    return `${spotifyCoverApiBaseUrl}/api/spotify/cover?url=${encodeURIComponent(
+      url.toString(),
+    )}`;
   } catch {
     return imageUrl;
   }

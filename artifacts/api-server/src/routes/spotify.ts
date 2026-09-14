@@ -142,7 +142,7 @@ router.get("/spotify/cover", async (req, res) => {
       .status(200)
       .set({
         "Cache-Control":
-          "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+          "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=86400",
         "Content-Type": contentType,
         "X-Content-Type-Options": "nosniff",
       })
