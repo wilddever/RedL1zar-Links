@@ -1,0 +1,385 @@
+{
+  "startedAt": "2026-09-14T15:41:11.384Z",
+  "productionUrl": "https://xn--d1ax3b.fun/",
+  "apiOrigin": "https://api.xn--d1ax3b.fun",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "browserVersion": "Chromium 152.0.7977.64",
+  "index": {
+    "status": 200,
+    "contentType": "text/html",
+    "cacheControl": null,
+    "etag": "W/\"ccf5f53c7dbfcf815ae83c2b490cff18\"",
+    "lastModified": "Mon, 14 Sep 2026 14:59:02 GMT",
+    "assets": [
+      "/assets/index-DFk8pNyr.js",
+      "/assets/index-BbaD6cDJ.css"
+    ],
+    "assetHashes": [
+      "DFk8pNyr",
+      "BbaD6cDJ"
+    ]
+  },
+  "endedAt": "2026-09-14T16:11:16.660Z",
+  "durationMs": 1805276,
+  "sampleCount": 1749,
+  "trackChangeCount": 14,
+  "trackChanges": [
+    {
+      "timestamp": "2026-09-14T15:41:15.796Z",
+      "from": null,
+      "to": "Отличный вкус (Это второй) — BUSHIDO ZHO — WESTGOTHS",
+      "classification": "cover-success",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b2734ee4cc6c13053754725db5e1"
+    },
+    {
+      "timestamp": "2026-09-14T15:42:44.627Z",
+      "from": "Отличный вкус (Это второй) — BUSHIDO ZHO — WESTGOTHS",
+      "to": "Hummer Balenci (Speed up) — Pepel Nahudi — HUMMER BALENCI",
+      "classification": "cover-success",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273a0ee5f3890c4f72cf5218cac"
+    },
+    {
+      "timestamp": "2026-09-14T15:44:15.028Z",
+      "from": "Hummer Balenci (Speed up) — Pepel Nahudi — HUMMER BALENCI",
+      "to": "Enigma! — unki — Enigma!",
+      "classification": "cover-success",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273b7a219329ff3f6056dc1ee9e"
+    },
+    {
+      "timestamp": "2026-09-14T15:45:44.322Z",
+      "from": "Enigma! — unki — Enigma!",
+      "to": "BALLOUT — unki — BALLOUT",
+      "classification": "card-cover-incomplete",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273f79be427bcd63fb203b706e4"
+    },
+    {
+      "timestamp": "2026-09-14T15:47:29.543Z",
+      "from": "BALLOUT — unki — BALLOUT",
+      "to": "Звезда упала — Sqwore — Eve",
+      "classification": "cover-success",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273f14f305c1fb3125fb471d6b0"
+    },
+    {
+      "timestamp": "2026-09-14T15:48:59.481Z",
+      "from": "Звезда упала — Sqwore — Eve",
+      "to": "Ага — 17 SEVENTEEN — Гипнофобия",
+      "classification": "cover-success",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273337ff8886371ba967b43792c"
+    },
+    {
+      "timestamp": "2026-09-14T15:50:44.368Z",
+      "from": "Ага — 17 SEVENTEEN — Гипнофобия",
+      "to": "Think U The Shit (Fart) - Sped Up — Ice Spice — Think U The Shit (Fart) [Versions]",
+      "classification": "card-cover-incomplete",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b2731178f071f3bc57b996f68cb3"
+    },
+    {
+      "timestamp": "2026-09-14T15:52:59.221Z",
+      "from": "Think U The Shit (Fart) - Sped Up — Ice Spice — Think U The Shit (Fart) [Versions]",
+      "to": "jeans — 2hollis — jeans",
+      "classification": "card-cover-incomplete",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273b8362432f72c45d2b6bf08d8"
+    },
+    {
+      "timestamp": "2026-09-14T15:55:59.553Z",
+      "from": "jeans — 2hollis — jeans",
+      "to": "Useless — midwxst — Secrets",
+      "classification": "cover-success",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273a201a5c5c2205c2c995753ae"
+    },
+    {
+      "timestamp": "2026-09-14T15:57:44.387Z",
+      "from": "Useless — midwxst — Secrets",
+      "to": "PRADA PARTY — Kai Angel — ММ",
+      "classification": "card-cover-incomplete",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273da9e196628311fb7e83ef5fa"
+    },
+    {
+      "timestamp": "2026-09-14T15:59:59.549Z",
+      "from": "PRADA PARTY — Kai Angel — ММ",
+      "to": "Teen Hit Song (Would've Been Even Harder If I Was Like 19) — OG Buda — POX VAWË",
+      "classification": "cover-success",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273802511d082d71667653b568f"
+    },
+    {
+      "timestamp": "2026-09-14T16:02:59.951Z",
+      "from": "Teen Hit Song (Would've Been Even Harder If I Was Like 19) — OG Buda — POX VAWË",
+      "to": "Удиви — Sqwore, Grechka — 432hz",
+      "classification": "cover-success",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273dfade61501dd17ca3729fe7b"
+    },
+    {
+      "timestamp": "2026-09-14T16:05:29.590Z",
+      "from": "Удиви — Sqwore, Grechka — 432hz",
+      "to": "Witch House — Sqwore, 17 SEVENTEEN — Как я провела лето",
+      "classification": "cover-success",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273eec75dc9557c2611363111c9"
+    },
+    {
+      "timestamp": "2026-09-14T16:07:44.882Z",
+      "from": "Witch House — Sqwore, 17 SEVENTEEN — Как я провела лето",
+      "to": "Tic Tac Toe — midwxst — Tic Tac Toe",
+      "classification": "cover-success",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273b77311fa27d585ab23ec8a40"
+    },
+    {
+      "timestamp": "2026-09-14T16:10:44.465Z",
+      "from": "Tic Tac Toe — midwxst — Tic Tac Toe",
+      "to": "СОК — GONE.Fludd — LIL CHILL",
+      "classification": "card-cover-incomplete",
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b27365e4bc26333cd1e1131a5537"
+    }
+  ],
+  "visualIncidentCount": 5,
+  "visualIncidents": [
+    {
+      "timestamp": "2026-09-14T15:45:44.334Z",
+      "classification": "card-cover-incomplete",
+      "title": "BALLOUT",
+      "artist": "unki",
+      "album": "BALLOUT",
+      "trackKey": "BALLOUT — unki — BALLOUT",
+      "card": true,
+      "cardCoverReady": false,
+      "liquidCoverReady": false,
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273f79be427bcd63fb203b706e4",
+      "liquidCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273f79be427bcd63fb203b706e4",
+      "sharedCoverSrc": true,
+      "hasCardFallback": false,
+      "hasLiquidFallback": false,
+      "insideCard": true,
+      "imageNaturalSize": [
+        0,
+        0
+      ],
+      "liquidNaturalSize": [
+        0,
+        0
+      ],
+      "imageRect": {
+        "left": 167.09375,
+        "top": 877.921875,
+        "right": 251.09375,
+        "bottom": 961.921875,
+        "width": 84,
+        "height": 84
+      },
+      "cardRect": {
+        "left": 152.5,
+        "top": 860.234375,
+        "right": 1272.5,
+        "bottom": 979.625,
+        "width": 1120,
+        "height": 119.390625
+      },
+      "viewport": [
+        1440,
+        1000
+      ],
+      "scrollY": 0
+    },
+    {
+      "timestamp": "2026-09-14T15:50:44.375Z",
+      "classification": "card-cover-incomplete",
+      "title": "Think U The Shit (Fart) - Sped Up",
+      "artist": "Ice Spice",
+      "album": "Think U The Shit (Fart) [Versions]",
+      "trackKey": "Think U The Shit (Fart) - Sped Up — Ice Spice — Think U The Shit (Fart) [Versions]",
+      "card": true,
+      "cardCoverReady": false,
+      "liquidCoverReady": false,
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b2731178f071f3bc57b996f68cb3",
+      "liquidCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b2731178f071f3bc57b996f68cb3",
+      "sharedCoverSrc": true,
+      "hasCardFallback": false,
+      "hasLiquidFallback": false,
+      "insideCard": true,
+      "imageNaturalSize": [
+        0,
+        0
+      ],
+      "liquidNaturalSize": [
+        0,
+        0
+      ],
+      "imageRect": {
+        "left": 167.09375,
+        "top": 877.921875,
+        "right": 251.09375,
+        "bottom": 961.921875,
+        "width": 84,
+        "height": 84
+      },
+      "cardRect": {
+        "left": 152.5,
+        "top": 860.234375,
+        "right": 1272.5,
+        "bottom": 979.625,
+        "width": 1120,
+        "height": 119.390625
+      },
+      "viewport": [
+        1440,
+        1000
+      ],
+      "scrollY": 0
+    },
+    {
+      "timestamp": "2026-09-14T15:52:59.228Z",
+      "classification": "card-cover-incomplete",
+      "title": "jeans",
+      "artist": "2hollis",
+      "album": "jeans",
+      "trackKey": "jeans — 2hollis — jeans",
+      "card": true,
+      "cardCoverReady": false,
+      "liquidCoverReady": false,
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273b8362432f72c45d2b6bf08d8",
+      "liquidCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273b8362432f72c45d2b6bf08d8",
+      "sharedCoverSrc": true,
+      "hasCardFallback": false,
+      "hasLiquidFallback": false,
+      "insideCard": true,
+      "imageNaturalSize": [
+        0,
+        0
+      ],
+      "liquidNaturalSize": [
+        0,
+        0
+      ],
+      "imageRect": {
+        "left": 167.09375,
+        "top": 877.921875,
+        "right": 251.09375,
+        "bottom": 961.921875,
+        "width": 84,
+        "height": 84
+      },
+      "cardRect": {
+        "left": 152.5,
+        "top": 860.234375,
+        "right": 1272.5,
+        "bottom": 979.625,
+        "width": 1120,
+        "height": 119.390625
+      },
+      "viewport": [
+        1440,
+        1000
+      ],
+      "scrollY": 0
+    },
+    {
+      "timestamp": "2026-09-14T15:57:44.396Z",
+      "classification": "card-cover-incomplete",
+      "title": "PRADA PARTY",
+      "artist": "Kai Angel",
+      "album": "ММ",
+      "trackKey": "PRADA PARTY — Kai Angel — ММ",
+      "card": true,
+      "cardCoverReady": false,
+      "liquidCoverReady": false,
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273da9e196628311fb7e83ef5fa",
+      "liquidCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273da9e196628311fb7e83ef5fa",
+      "sharedCoverSrc": true,
+      "hasCardFallback": false,
+      "hasLiquidFallback": false,
+      "insideCard": true,
+      "imageNaturalSize": [
+        0,
+        0
+      ],
+      "liquidNaturalSize": [
+        0,
+        0
+      ],
+      "imageRect": {
+        "left": 167.09375,
+        "top": 877.921875,
+        "right": 251.09375,
+        "bottom": 961.921875,
+        "width": 84,
+        "height": 84
+      },
+      "cardRect": {
+        "left": 152.5,
+        "top": 860.234375,
+        "right": 1272.5,
+        "bottom": 979.625,
+        "width": 1120,
+        "height": 119.390625
+      },
+      "viewport": [
+        1440,
+        1000
+      ],
+      "scrollY": 0
+    },
+    {
+      "timestamp": "2026-09-14T16:10:44.478Z",
+      "classification": "card-cover-incomplete",
+      "title": "СОК",
+      "artist": "GONE.Fludd",
+      "album": "LIL CHILL",
+      "trackKey": "СОК — GONE.Fludd — LIL CHILL",
+      "card": true,
+      "cardCoverReady": false,
+      "liquidCoverReady": false,
+      "cardCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b27365e4bc26333cd1e1131a5537",
+      "liquidCoverSrc": "https://api.xn--d1ax3b.fun/api/spotify/cover?url=https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b27365e4bc26333cd1e1131a5537",
+      "sharedCoverSrc": true,
+      "hasCardFallback": false,
+      "hasLiquidFallback": false,
+      "insideCard": true,
+      "imageNaturalSize": [
+        0,
+        0
+      ],
+      "liquidNaturalSize": [
+        0,
+        0
+      ],
+      "imageRect": {
+        "left": 167.09375,
+        "top": 877.921875,
+        "right": 251.09375,
+        "bottom": 961.921875,
+        "width": 84,
+        "height": 84
+      },
+      "cardRect": {
+        "left": 152.5,
+        "top": 860.234375,
+        "right": 1272.5,
+        "bottom": 979.625,
+        "width": 1120,
+        "height": 119.390625
+      },
+      "viewport": [
+        1440,
+        1000
+      ],
+      "scrollY": 0
+    }
+  ],
+  "browserErrorCount": 1,
+  "browserErrors": [
+    {
+      "timestamp": "2026-09-14T15:41:14.035Z",
+      "text": "Failed to load resource: the server responded with a status of 403 ()",
+      "source": "network"
+    }
+  ],
+  "uiCounts": {
+    "cover-success": 1744,
+    "card-cover-incomplete": 5
+  },
+  "networkResponseCounts": {
+    "currentlyPlaying": 121,
+    "cover": 15
+  }
+}
