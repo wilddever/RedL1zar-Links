@@ -48,6 +48,19 @@ type SpotifyConfig = {
   ownerToken: string | null;
 };
 
+type SignSubmission = {
+  id: string;
+  nickname: string;
+  createdAt: string;
+  status: 'pending' | 'approved' | 'rejected';
+};
+
+type SignWallCard = {
+  id: string;
+  nickname: string;
+  createdAt: string;
+};
+
 const SPOTIFY_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize';
 const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
 const SPOTIFY_CURRENTLY_PLAYING_URL =
@@ -68,6 +81,13 @@ const encoder = new TextEncoder();
 const SPOTIFY_COVER_CACHE_TTL_SECONDS = 86_400;
 const SPOTIFY_COVER_MAX_BYTES = 5 * 1024 * 1024;
 const SPOTIFY_COVER_RETRY_DELAY_MS = 150;
+const SIGN_WALL_KEY = 'sign:wall';
+const SIGN_SUBMISSION_PREFIX = 'sign:submission:';
+const SIGN_IMAGE_PREFIX = 'sign:image:';
+const SIGN_RATE_PREFIX = 'sign-rate:';
+const SIGN_MAX_NICKNAME_LENGTH = 48;
+const SIGN_MAX_IMAGE_BYTES = 600_000;
+const SIGN_WALL_LIMIT = 120;
 
 let accessTokenCache: { accessToken: string; expiresAt: number } | undefined;
 let refreshInFlight: Promise<string | null> | undefined;
@@ -121,6 +141,8 @@ function getCorsOrigin(request: Request, env: Env) {
     'http://рэд.fun',
     'http://localhost:5173',
     'http://localhost:8787',
+    'http://localhost',
+    'http://127.0.0.1',
   ]);
   return allowedOrigins.has(origin) ? origin : null;
 }
@@ -153,6 +175,33 @@ async function fetchWithTimeout(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function sendSignModerationPhoto(
+  botToken: string,
+  chatId: string,
+  imageBytes: Uint8Array,
+  caption: string,
+) {
+  const body = new FormData();
+  body.append('chat_id', chatId);
+  body.append('caption', caption);
+  body.append(
+    'photo',
+    new Blob([imageBytes.buffer as ArrayBuffer], { type: 'image/png' }),
+    'sign-card.png',
+  );
+
+  const response = await fetchWithTimeout(
+    `https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendPhoto`,
+    { method: 'POST', body },
+    15_000,
+  );
+  if (!response.ok) return false;
+  const payload = (await response.json().catch(() => null)) as
+    | { ok?: boolean }
+    | null;
+  return payload?.ok === true;
 }
 
 function getSpotifyCoverCacheKey(request: Request, imageUrl: string) {
@@ -245,6 +294,50 @@ async function sha256Hex(value: string) {
   return bytesToHex(
     new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(value))),
   );
+}
+
+function decodeBase64(value: string) {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+function signSubmissionKey(id: string) {
+  return `${SIGN_SUBMISSION_PREFIX}${id}`;
+}
+
+function signImageKey(id: string) {
+  return `${SIGN_IMAGE_PREFIX}${id}`;
+}
+
+async function createSignModerationToken(
+  sessionSecret: string,
+  id: string,
+  action: 'approve' | 'reject',
+) {
+  return hmacHex(sessionSecret, `sign-moderate:${id}:${action}`);
+}
+
+async function isValidSignModerationToken(
+  sessionSecret: string,
+  id: string,
+  action: 'approve' | 'reject',
+  token: string | null,
+) {
+  if (!token || !/^[a-f0-9]{64}$/.test(token)) return false;
+  return equalSecret(
+    token,
+    await createSignModerationToken(sessionSecret, id, action),
+  );
+}
+
+function createSignImageDataUrl(request: Request, id: string) {
+  const imageUrl = new URL('/api/sign/image', request.url);
+  imageUrl.searchParams.set('id', id);
+  return imageUrl.toString();
 }
 
 function equalSecret(left: string | null, right: string | null) {
@@ -1058,6 +1151,240 @@ async function handleApi(
     if (!title || !artist) return noStore({ url: YANDEX_404_URL });
     const match = await findYandexTrack(title, artist, album);
     return noStore(match ?? { url: yandexSearchUrl(title, artist, album) });
+  }
+
+  if (url.pathname === '/api/sign/wall' && request.method === 'GET') {
+    const rawWall = await env.SPOTIFY_KV.get(SIGN_WALL_KEY);
+    let wall: SignWallCard[] = [];
+    try {
+      const parsed = rawWall ? JSON.parse(rawWall) : [];
+      if (Array.isArray(parsed)) {
+        wall = parsed.filter(
+          (card): card is SignWallCard =>
+            typeof card?.id === 'string' &&
+            typeof card?.nickname === 'string' &&
+            typeof card?.createdAt === 'string',
+        );
+      }
+    } catch {}
+
+    return noStore({
+      cards: wall.slice(0, SIGN_WALL_LIMIT).map((card) => ({
+        ...card,
+        imageUrl: createSignImageDataUrl(request, card.id),
+      })),
+    });
+  }
+
+  if (url.pathname === '/api/sign/image' && request.method === 'GET') {
+    const id = url.searchParams.get('id')?.trim() || '';
+    if (!/^[a-f0-9]{32}$/.test(id)) return text('Not found', 404);
+
+    const rawSubmission = await env.SPOTIFY_KV.get(signSubmissionKey(id));
+    const imageBase64 = await env.SPOTIFY_KV.get(signImageKey(id));
+    if (!rawSubmission || !imageBase64) return text('Not found', 404);
+
+    try {
+      const submission = JSON.parse(rawSubmission) as Partial<SignSubmission>;
+      if (submission.status !== 'approved') return text('Not found', 404);
+      const imageBytes = decodeBase64(imageBase64);
+      return new Response(imageBytes, {
+        headers: {
+          'Cache-Control':
+            'public, max-age=300, s-maxage=86400, stale-while-revalidate=604800',
+          'Content-Type': 'image/png',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
+    } catch {
+      return text('Not found', 404);
+    }
+  }
+
+  if (url.pathname === '/api/sign/cards' && request.method === 'POST') {
+    const rawBody = (await request.json().catch(() => null)) as {
+      nickname?: unknown;
+      image?: unknown;
+    } | null;
+    const nickname = typeof rawBody?.nickname === 'string'
+      ? rawBody.nickname.trim()
+      : '';
+    const image = typeof rawBody?.image === 'string' ? rawBody.image : '';
+    if (
+      !nickname ||
+      nickname.length > SIGN_MAX_NICKNAME_LENGTH ||
+      /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(nickname)
+    ) {
+      return noStore(
+        {
+          ok: false,
+          message: `Ник должен содержать от 1 до ${SIGN_MAX_NICKNAME_LENGTH} символов.`,
+        },
+        400,
+      );
+    }
+
+    const imageMatch = image.match(/^data:image\/png;base64,([A-Za-z0-9+/=]+)$/);
+    if (!imageMatch) {
+      return noStore(
+        { ok: false, message: 'Нужен рисунок в формате PNG.' },
+        400,
+      );
+    }
+
+    let imageBytes: Uint8Array;
+    try {
+      imageBytes = decodeBase64(imageMatch[1]);
+    } catch {
+      return noStore({ ok: false, message: 'Рисунок повреждён.' }, 400);
+    }
+    if (imageBytes.byteLength === 0 || imageBytes.byteLength > SIGN_MAX_IMAGE_BYTES) {
+      return noStore(
+        { ok: false, message: 'Рисунок слишком большой. Попробуйте сделать его проще.' },
+        413,
+      );
+    }
+
+    const botToken = env.TELEGRAM_BOT_TOKEN?.trim();
+    const chatId = env.TELEGRAM_CHAT_ID?.trim();
+    const sessionSecret = env.SESSION_SECRET?.trim();
+    if (!botToken || !chatId || !sessionSecret) {
+      return noStore(
+        { ok: false, message: 'Модерация пока не подключена.' },
+        503,
+      );
+    }
+
+    const clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const rateKey = `${SIGN_RATE_PREFIX}${await sha256Hex(clientIp)}`;
+    if (await env.SPOTIFY_KV.get(rateKey)) {
+      return noStore(
+        { ok: false, message: 'Можно отправлять только одну карточку в час.' },
+        429,
+      );
+    }
+
+    const id = randomHex(16);
+    const createdAt = new Date().toISOString();
+    const submission: SignSubmission = {
+      id,
+      nickname,
+      createdAt,
+      status: 'pending',
+    };
+    const approveToken = await createSignModerationToken(
+      sessionSecret,
+      id,
+      'approve',
+    );
+    const rejectToken = await createSignModerationToken(
+      sessionSecret,
+      id,
+      'reject',
+    );
+    const createModerationUrl = (
+      action: 'approve' | 'reject',
+      token: string,
+    ) => {
+      const moderationUrl = new URL('/api/sign/moderate', request.url);
+      moderationUrl.searchParams.set('id', id);
+      moderationUrl.searchParams.set('action', action);
+      moderationUrl.searchParams.set('token', token);
+      return moderationUrl.toString();
+    };
+    const caption = [
+      'Новая sign-карточка RedL1zar',
+      `Ник: ${nickname}`,
+      '',
+      `APPROVE: ${createModerationUrl('approve', approveToken)}`,
+      `REJECT: ${createModerationUrl('reject', rejectToken)}`,
+    ].join('\n');
+
+    await env.SPOTIFY_KV.put(rateKey, '1', { expirationTtl: 60 * 60 });
+    await env.SPOTIFY_KV.put(signImageKey(id), imageMatch[1]);
+    await env.SPOTIFY_KV.put(signSubmissionKey(id), JSON.stringify(submission));
+
+    try {
+      const sent = await sendSignModerationPhoto(
+        botToken,
+        chatId,
+        imageBytes,
+        caption,
+      );
+      if (!sent) throw new Error('Telegram rejected sign-card photo');
+      return noStore({ ok: true, id });
+    } catch {
+      await env.SPOTIFY_KV.delete(rateKey);
+      await env.SPOTIFY_KV.delete(signImageKey(id));
+      await env.SPOTIFY_KV.delete(signSubmissionKey(id));
+      return noStore(
+        { ok: false, message: 'Не удалось отправить карточку на модерацию.' },
+        502,
+      );
+    }
+  }
+
+  if (url.pathname === '/api/sign/moderate' && request.method === 'GET') {
+    const id = url.searchParams.get('id')?.trim() || '';
+    const action = url.searchParams.get('action');
+    const token = url.searchParams.get('token');
+    const sessionSecret = env.SESSION_SECRET?.trim();
+    if (
+      !/^[a-f0-9]{32}$/.test(id) ||
+      (action !== 'approve' && action !== 'reject') ||
+      !sessionSecret ||
+      !(await isValidSignModerationToken(sessionSecret, id, action, token))
+    ) {
+      return text('Недействительная ссылка модерации.', 403);
+    }
+
+    const submissionKey = signSubmissionKey(id);
+    const rawSubmission = await env.SPOTIFY_KV.get(submissionKey);
+    if (!rawSubmission) return text('Карточка не найдена.', 404);
+
+    let submission: SignSubmission;
+    try {
+      submission = JSON.parse(rawSubmission) as SignSubmission;
+    } catch {
+      return text('Карточка повреждена.', 500);
+    }
+    if (submission.status !== 'pending') {
+      return text('Эта карточка уже обработана.', 409);
+    }
+
+    if (action === 'reject') {
+      await env.SPOTIFY_KV.put(
+        submissionKey,
+        JSON.stringify({ ...submission, status: 'rejected' }),
+        { expirationTtl: 7 * 24 * 60 * 60 },
+      );
+      await env.SPOTIFY_KV.delete(signImageKey(id));
+      return redirectToApp(env, '/?sign=rejected#sign');
+    }
+
+    const rawWall = await env.SPOTIFY_KV.get(SIGN_WALL_KEY);
+    let wall: SignWallCard[] = [];
+    try {
+      const parsed = rawWall ? JSON.parse(rawWall) : [];
+      if (Array.isArray(parsed)) {
+        wall = parsed.filter(
+          (card): card is SignWallCard =>
+            typeof card?.id === 'string' &&
+            typeof card?.nickname === 'string' &&
+            typeof card?.createdAt === 'string',
+        );
+      }
+    } catch {}
+    const nextWall = [
+      { id: submission.id, nickname: submission.nickname, createdAt: submission.createdAt },
+      ...wall.filter((card) => card.id !== submission.id),
+    ].slice(0, SIGN_WALL_LIMIT);
+    await env.SPOTIFY_KV.put(SIGN_WALL_KEY, JSON.stringify(nextWall));
+    await env.SPOTIFY_KV.put(
+      submissionKey,
+      JSON.stringify({ ...submission, status: 'approved' }),
+    );
+    return redirectToApp(env, '/?sign=approved#sign');
   }
 
   if (url.pathname === '/api/send' && request.method === 'POST') {

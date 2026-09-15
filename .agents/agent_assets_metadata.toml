@@ -84,3 +84,17 @@ mtime_ms = 1789409622239
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/29f58164-1b9c-4d42-bb76-d17896bf15f6/bc24cf5a-4418-411a-9745-bb9fb1ded687"
 storage_version_token = "1789409629633545"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "cfCjJjAQfJKROq66Kg0qh"
+uri = "file://deliverables/redl1zar-sign-frontend.zip"
+type = "unspecified"
+title = "RedL1zar sign frontend for VK Cloud"
+description = "Fresh cloudflare/dist archive with index.html at the root and the new #sign canvas wall UI. Upload the archive contents to the VK Cloud Object Storage bucket root."
+logical_id = "3c450aff-5185-4c3f-8594-ec722ef36a0b"
+content_hash = "sha256:29c7a2077e1e74dfaa55375d29fa3171afa938451622c410240f8b64b653340c"
+size = 576580
+mtime_ms = 1789454488298
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/3c450aff-5185-4c3f-8594-ec722ef36a0b/74ea1541-999d-4ca5-88d3-ace68c8861dd"
+storage_version_token = "1789454493465192"
+content_type = "application/octet-stream"

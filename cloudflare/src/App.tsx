@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type MouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { CalendarPlus, ExternalLink } from 'lucide-react';
 import { SiPinterest, SiSpotify, SiSteam, SiTelegram } from 'react-icons/si';
 import {
@@ -179,12 +186,13 @@ function ChaoticName() {
   );
 }
 
-type View = 'home' | 'playlists' | 'birthday' | 'send';
+type View = 'home' | 'playlists' | 'birthday' | 'send' | 'sign';
 
 function getViewFromLocation(): View {
   if (window.location.hash === '#playlists') return 'playlists';
   if (window.location.hash === '#birthday') return 'birthday';
   if (window.location.hash === '#send') return 'send';
+  if (window.location.hash === '#sign') return 'sign';
   return 'home';
 }
 
@@ -315,6 +323,8 @@ function Home() {
           ? '#birthday'
           : view === 'send'
             ? '#send'
+            : view === 'sign'
+              ? '#sign'
             : '#home';
     if (window.location.hash !== nextHash) {
       window.history.pushState({}, '', nextHash);
@@ -398,6 +408,15 @@ function Home() {
           >
             birthday
           </button>
+           <button
+             aria-current={activeView === 'sign' ? 'page' : undefined}
+             className={`section-nav__tab ${activeView === 'sign' ? 'section-nav__tab--active' : ''}`}
+             data-testid="button-section-sign"
+             onClick={() => navigateTo('sign')}
+             type="button"
+           >
+             sign
+           </button>
         </nav>
 
         {activeView === 'home' ? (
@@ -461,6 +480,8 @@ function Home() {
           <PlaylistsView />
         ) : activeView === 'birthday' ? (
           <BirthdayView />
+        ) : activeView === 'sign' ? (
+          <SignView />
         ) : (
           <SendView />
         )}
@@ -733,6 +754,376 @@ function SendView() {
           </p>
         ) : null}
       </form>
+    </section>
+  );
+}
+
+type SignCard = {
+  id: string;
+  nickname: string;
+  imageUrl: string;
+  createdAt: string;
+};
+
+type SignWallState = 'loading' | 'ready' | 'error';
+
+function formatSignDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'recent mark';
+  return new Intl.DateTimeFormat(undefined, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
+
+function SignView() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawingRef = useRef(false);
+  const hasDrawingRef = useRef(false);
+  const [hasDrawing, setHasDrawing] = useState(false);
+  const [nickname, setNickname] = useState('');
+  const [tool, setTool] = useState<'marker' | 'eraser'>('marker');
+  const [submitStatus, setSubmitStatus] = useState<
+    'idle' | 'sending' | 'sent' | 'error'
+  >('idle');
+  const [submitMessage, setSubmitMessage] = useState('');
+  const [wallCards, setWallCards] = useState<SignCard[]>([]);
+  const [wallStatus, setWallStatus] = useState<SignWallState>('loading');
+  const [wallError, setWallError] = useState('');
+  const [wallReloadKey, setWallReloadKey] = useState(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(1, Math.round(rect.width * dpr));
+      const height = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      context.fillStyle = '#eee4d3';
+      context.fillRect(0, 0, rect.width, rect.height);
+      context.lineCap = 'round';
+      context.lineJoin = 'round';
+      context.lineWidth = 5;
+    };
+
+    resizeCanvas();
+    const observer = new ResizeObserver(resizeCanvas);
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setWallStatus('loading');
+    setWallError('');
+
+    fetch(apiUrl('/api/sign/wall'), {
+      cache: 'no-store',
+      credentials: 'include',
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const result = (await response.json().catch(() => null)) as
+          | { cards?: SignCard[]; message?: string }
+          | null;
+        if (!response.ok || !Array.isArray(result?.cards)) {
+          throw new Error(result?.message ?? 'The wall could not be loaded.');
+        }
+        return result.cards;
+      })
+      .then((cards) => {
+        setWallCards(cards);
+        setWallStatus('ready');
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        setWallStatus('error');
+        setWallError(
+          error instanceof Error ? error.message : 'The wall could not be loaded.',
+        );
+      });
+
+    return () => controller.abort();
+  }, [wallReloadKey]);
+
+  const getCanvasPoint = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+  };
+
+  const startDrawing = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const canvas = canvasRef.current;
+    const point = getCanvasPoint(event);
+    if (!canvas || !point) return;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    event.preventDefault();
+    canvas.setPointerCapture(event.pointerId);
+    context.beginPath();
+    context.moveTo(point.x, point.y);
+    drawingRef.current = true;
+    hasDrawingRef.current = true;
+    setHasDrawing(true);
+  };
+
+  const draw = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (!drawingRef.current) return;
+    const point = getCanvasPoint(event);
+    const canvas = canvasRef.current;
+    if (!point || !canvas) return;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    event.preventDefault();
+    context.strokeStyle = tool === 'marker' ? '#11100e' : '#eee4d3';
+    context.lineWidth = 5;
+    context.lineTo(point.x, point.y);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(point.x, point.y);
+  };
+
+  const stopDrawing = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (!drawingRef.current) return;
+    drawingRef.current = false;
+    const canvas = canvasRef.current;
+    if (canvas?.hasPointerCapture(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    context.fillStyle = '#eee4d3';
+    context.fillRect(0, 0, rect.width, rect.height);
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.lineWidth = 5;
+    hasDrawingRef.current = false;
+    setHasDrawing(false);
+    setSubmitStatus('idle');
+    setSubmitMessage('');
+  };
+
+  const submitSign = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedNickname = nickname.trim();
+    const canvas = canvasRef.current;
+    if (!trimmedNickname || !canvas || !hasDrawingRef.current || submitStatus === 'sending') {
+      return;
+    }
+
+    setSubmitStatus('sending');
+    setSubmitMessage('');
+    try {
+      const response = await fetch(apiUrl('/api/sign/cards'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nickname: trimmedNickname,
+          image: canvas.toDataURL('image/png'),
+        }),
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { ok?: boolean; id?: string; message?: string }
+        | null;
+      if (!response.ok || !result?.ok || !result.id) {
+        throw new Error(result?.message ?? 'Your mark could not be submitted.');
+      }
+      setNickname('');
+      clearCanvas();
+      setSubmitStatus('sent');
+      setSubmitMessage('Mark sent for moderation. Thank you.');
+    } catch (error) {
+      setSubmitStatus('error');
+      setSubmitMessage(
+        error instanceof Error ? error.message : 'Your mark could not be submitted.',
+      );
+    }
+  };
+
+  return (
+    <section className="sign-section" aria-labelledby="sign-title">
+      <div className="sign-intro">
+        <div className="eyebrow mono-label">community frequency</div>
+        <h1 id="sign-title">sign the wall</h1>
+        <p>
+          leave a small mark in the signal. draw your signature, add a nickname,
+          and send it into the guestbook.
+        </p>
+      </div>
+
+      <form className="sign-form" onSubmit={submitSign}>
+        <div className="sign-form__header">
+          <span className="mono-label">your mark</span>
+          <span className="sign-form__instruction">black marker / one stroke weight</span>
+        </div>
+        <div className="sign-canvas-wrap">
+          <canvas
+            aria-label="Draw your signature"
+            className="sign-canvas"
+            data-testid="canvas-signature"
+            height="420"
+            onPointerCancel={stopDrawing}
+            onPointerDown={startDrawing}
+            onPointerMove={draw}
+            onPointerUp={stopDrawing}
+            ref={canvasRef}
+            width="900"
+          />
+          <span className="sign-canvas__hint" aria-hidden="true">
+            make a mark
+          </span>
+        </div>
+        <div className="sign-tools" aria-label="Drawing tools">
+          <div className="sign-tool-group">
+            <button
+              aria-pressed={tool === 'marker'}
+              className={`sign-tool ${tool === 'marker' ? 'sign-tool--active' : ''}`}
+              data-testid="button-sign-marker"
+              onClick={() => setTool('marker')}
+              type="button"
+            >
+              marker
+            </button>
+            <button
+              aria-pressed={tool === 'eraser'}
+              className={`sign-tool ${tool === 'eraser' ? 'sign-tool--active' : ''}`}
+              data-testid="button-sign-eraser"
+              onClick={() => setTool('eraser')}
+              type="button"
+            >
+              eraser
+            </button>
+          </div>
+          <button
+            className="sign-clear"
+            data-testid="button-sign-clear"
+            onClick={clearCanvas}
+            type="button"
+          >
+            reset
+          </button>
+        </div>
+        <label className="sign-field">
+          <span className="mono-label">nickname</span>
+          <input
+            aria-describedby="sign-note"
+            data-testid="input-sign-nickname"
+            maxLength={48}
+            onChange={(event) => {
+              setNickname(event.target.value);
+              if (submitStatus !== 'idle') {
+                setSubmitStatus('idle');
+                setSubmitMessage('');
+              }
+            }}
+            placeholder="how should we sign you?"
+            required
+            value={nickname}
+          />
+        </label>
+        <div className="sign-submit-row">
+          <p className="sign-note mono-label" id="sign-note">
+            submissions are moderated before they appear on the wall
+          </p>
+          <button
+            className="send-submit sign-submit"
+            data-testid="button-submit-signature"
+            disabled={submitStatus === 'sending' || !nickname.trim() || !hasDrawing}
+            type="submit"
+          >
+            {submitStatus === 'sending' ? 'sending…' : 'leave mark ↗'}
+          </button>
+        </div>
+        {submitMessage ? (
+          <p
+            aria-live="polite"
+            className={`send-status send-status--${submitStatus}`}
+            data-testid="status-sign-submit"
+          >
+            {submitMessage}
+          </p>
+        ) : null}
+      </form>
+
+      <section className="sign-wall" aria-labelledby="sign-wall-title">
+        <div className="sign-wall__header">
+          <div>
+            <div className="eyebrow mono-label">approved signals</div>
+            <h2 id="sign-wall-title">the wall</h2>
+          </div>
+          <span className="mono-label">{wallCards.length} marks</span>
+        </div>
+        {wallStatus === 'loading' ? (
+          <div className="sign-wall-grid" aria-label="Loading signatures">
+            {[0, 1, 2].map((index) => (
+              <div className="sign-card sign-card--skeleton" key={index}>
+                <span />
+                <span />
+              </div>
+            ))}
+          </div>
+        ) : wallStatus === 'error' ? (
+          <div className="sign-wall-state sign-wall-state--error" role="alert">
+            <p>{wallError}</p>
+            <button
+              className="sign-retry"
+              data-testid="button-retry-sign-wall"
+              onClick={() => setWallReloadKey((value) => value + 1)}
+              type="button"
+            >
+              try again
+            </button>
+          </div>
+        ) : wallCards.length === 0 ? (
+          <div className="sign-wall-state">
+            <span className="sign-wall-state__line" aria-hidden="true" />
+            <p>the first mark is still waiting.</p>
+            <span className="mono-label">be signal one</span>
+          </div>
+        ) : (
+          <div className="sign-wall-grid">
+            {wallCards.map((card) => (
+              <article className="sign-card" data-testid={`card-sign-${card.id}`} key={card.id}>
+                <div className="sign-card__image-wrap">
+                  <img
+                    alt={`Signature by ${card.nickname}`}
+                    className="sign-card__image"
+                    data-testid={`img-sign-${card.id}`}
+                    loading="lazy"
+                    src={card.imageUrl}
+                  />
+                </div>
+                <div className="sign-card__meta">
+                  <strong>{card.nickname}</strong>
+                  <span className="mono-label">{formatSignDate(card.createdAt)}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </section>
   );
 }
