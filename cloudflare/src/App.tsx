@@ -777,6 +777,23 @@ function formatSignDate(value: string) {
   }).format(date);
 }
 
+function createSignUploadBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = 720;
+  exportCanvas.height = 336;
+  const context = exportCanvas.getContext('2d');
+  if (!context) return Promise.reject(new Error('Canvas is unavailable.'));
+  context.fillStyle = '#eee4d3';
+  context.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  context.drawImage(canvas, 0, 0, exportCanvas.width, exportCanvas.height);
+  return new Promise((resolve, reject) => {
+    exportCanvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('Could not export the drawing.'))),
+      'image/png',
+    );
+  });
+}
+
 function SignView() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
@@ -935,15 +952,16 @@ function SignView() {
     setSubmitStatus('sending');
     setSubmitMessage('');
     try {
-      const response = await fetch(apiUrl('/api/sign/cards'), {
+      const imageBlob = await createSignUploadBlob(canvas);
+      const response = await fetch(
+        apiUrl(`/api/sign/cards?nickname=${encodeURIComponent(trimmedNickname)}`),
+        {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nickname: trimmedNickname,
-          image: canvas.toDataURL('image/png'),
-        }),
-      });
+          headers: { 'Content-Type': 'image/png' },
+          body: imageBlob,
+        },
+      );
       const result = (await response.json().catch(() => null)) as
         | { ok?: boolean; id?: string; message?: string }
         | null;

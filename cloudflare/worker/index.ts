@@ -349,6 +349,25 @@ function decodeBase64(value: string) {
   return bytes;
 }
 
+function encodeBase64(bytes: Uint8Array) {
+  let binary = '';
+  const chunkSize = 0x8_000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(offset, Math.min(offset + chunkSize, bytes.length)),
+    );
+  }
+  return btoa(binary);
+}
+
+function isPng(bytes: Uint8Array) {
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  return (
+    bytes.length >= signature.length &&
+    signature.every((value, index) => bytes[index] === value)
+  );
+}
+
 function signSubmissionKey(id: string) {
   return `${SIGN_SUBMISSION_PREFIX}${id}`;
 }
@@ -1246,14 +1265,41 @@ async function handleApi(
   }
 
   if (url.pathname === '/api/sign/cards' && request.method === 'POST') {
-    const rawBody = (await request.json().catch(() => null)) as {
-      nickname?: unknown;
-      image?: unknown;
-    } | null;
-    const nickname = typeof rawBody?.nickname === 'string'
-      ? rawBody.nickname.trim()
-      : '';
-    const image = typeof rawBody?.image === 'string' ? rawBody.image : '';
+    const contentType = request.headers.get('Content-Type')?.split(';', 1)[0].trim();
+    let nickname = '';
+    let imageBase64 = '';
+    let imageBytes: Uint8Array;
+
+    if (contentType === 'image/png') {
+      nickname = url.searchParams.get('nickname')?.trim() || '';
+      imageBytes = new Uint8Array(await request.arrayBuffer());
+      if (imageBytes.byteLength > 0) {
+        imageBase64 = encodeBase64(imageBytes);
+      }
+    } else {
+      const rawBody = (await request.json().catch(() => null)) as {
+        nickname?: unknown;
+        image?: unknown;
+      } | null;
+      nickname = typeof rawBody?.nickname === 'string'
+        ? rawBody.nickname.trim()
+        : '';
+      const image = typeof rawBody?.image === 'string' ? rawBody.image : '';
+      const imageMatch = image.match(/^data:image\/png;base64,([A-Za-z0-9+/=]+)$/);
+      if (!imageMatch) {
+        return noStore(
+          { ok: false, message: 'Нужен рисунок в формате PNG.' },
+          400,
+        );
+      }
+      imageBase64 = imageMatch[1];
+      try {
+        imageBytes = decodeBase64(imageBase64);
+      } catch {
+        return noStore({ ok: false, message: 'Рисунок повреждён.' }, 400);
+      }
+    }
+
     if (
       !nickname ||
       nickname.length > SIGN_MAX_NICKNAME_LENGTH ||
@@ -1268,21 +1314,10 @@ async function handleApi(
       );
     }
 
-    const imageMatch = image.match(/^data:image\/png;base64,([A-Za-z0-9+/=]+)$/);
-    if (!imageMatch) {
-      return noStore(
-        { ok: false, message: 'Нужен рисунок в формате PNG.' },
-        400,
-      );
+    if (!isPng(imageBytes)) {
+      return noStore({ ok: false, message: 'Нужен корректный PNG-файл.' }, 400);
     }
-
-    let imageBytes: Uint8Array;
-    try {
-      imageBytes = decodeBase64(imageMatch[1]);
-    } catch {
-      return noStore({ ok: false, message: 'Рисунок повреждён.' }, 400);
-    }
-    if (imageBytes.byteLength === 0 || imageBytes.byteLength > SIGN_MAX_IMAGE_BYTES) {
+    if (imageBytes.byteLength > SIGN_MAX_IMAGE_BYTES) {
       return noStore(
         { ok: false, message: 'Рисунок слишком большой. Попробуйте сделать его проще.' },
         413,
@@ -1345,27 +1380,15 @@ async function handleApi(
     ].join('\n');
 
     await env.SPOTIFY_KV.put(rateKey, '1', { expirationTtl: 60 * 60 });
-    await env.SPOTIFY_KV.put(signImageKey(id), imageMatch[1]);
+    await env.SPOTIFY_KV.put(signImageKey(id), imageBase64);
     await env.SPOTIFY_KV.put(signSubmissionKey(id), JSON.stringify(submission));
 
-    try {
-      const sent = await sendSignModerationPhoto(
-        botToken,
-        chatId,
-        imageBytes,
-        caption,
-      );
-      if (!sent) throw new Error('Telegram rejected sign-card photo');
-      return noStore({ ok: true, id });
-    } catch {
-      await env.SPOTIFY_KV.delete(rateKey);
-      await env.SPOTIFY_KV.delete(signImageKey(id));
-      await env.SPOTIFY_KV.delete(signSubmissionKey(id));
-      return noStore(
-        { ok: false, message: 'Не удалось отправить карточку на модерацию.' },
-        502,
-      );
-    }
+    ctx.waitUntil(
+      retrySignNotification(() =>
+        sendSignModerationPhoto(botToken, chatId, imageBytes, caption),
+      ),
+    );
+    return noStore({ ok: true, id });
   }
 
   if (url.pathname === '/api/sign/moderate' && request.method === 'GET') {
@@ -1375,7 +1398,7 @@ async function handleApi(
     const sessionSecret = env.SESSION_SECRET?.trim();
     if (
       !/^[a-f0-9]{32}$/.test(id) ||
-      (action !== 'approve' && action !== 'reject') ||
+      (action !== 'approve' && action !== 'reject' && action !== 'delete') ||
       !sessionSecret ||
       !(await isValidSignModerationToken(sessionSecret, id, action, token))
     ) {
@@ -1392,6 +1415,38 @@ async function handleApi(
     } catch {
       return text('Карточка повреждена.', 500);
     }
+
+    if (action === 'delete') {
+      if (submission.status !== 'approved') {
+        return text('Удалить можно только опубликованную карточку.', 409);
+      }
+
+      const rawWall = await env.SPOTIFY_KV.get(SIGN_WALL_KEY);
+      let wall: SignWallCard[] = [];
+      try {
+        const parsed = rawWall ? JSON.parse(rawWall) : [];
+        if (Array.isArray(parsed)) {
+          wall = parsed.filter(
+            (card): card is SignWallCard =>
+              typeof card?.id === 'string' &&
+              typeof card?.nickname === 'string' &&
+              typeof card?.createdAt === 'string',
+          );
+        }
+      } catch {}
+      await env.SPOTIFY_KV.put(
+        SIGN_WALL_KEY,
+        JSON.stringify(wall.filter((card) => card.id !== id)),
+      );
+      await env.SPOTIFY_KV.put(
+        submissionKey,
+        JSON.stringify({ ...submission, status: 'deleted' }),
+        { expirationTtl: 7 * 24 * 60 * 60 },
+      );
+      await env.SPOTIFY_KV.delete(signImageKey(id));
+      return redirectToApp(env, '/?sign=deleted#sign');
+    }
+
     if (submission.status !== 'pending') {
       return text('Эта карточка уже обработана.', 409);
     }
@@ -1428,6 +1483,29 @@ async function handleApi(
       submissionKey,
       JSON.stringify({ ...submission, status: 'approved' }),
     );
+    const botToken = env.TELEGRAM_BOT_TOKEN?.trim();
+    const chatId = env.TELEGRAM_CHAT_ID?.trim();
+    if (botToken && chatId) {
+      const deleteToken = await createSignModerationToken(
+        sessionSecret,
+        id,
+        'delete',
+      );
+      const deleteUrl = new URL('/api/sign/moderate', request.url);
+      deleteUrl.searchParams.set('id', id);
+      deleteUrl.searchParams.set('action', 'delete');
+      deleteUrl.searchParams.set('token', deleteToken);
+      ctx.waitUntil(
+        retrySignNotification(() =>
+          sendSignDeletionNotice(
+            botToken,
+            chatId,
+            submission.nickname,
+            deleteUrl.toString(),
+          ),
+        ),
+      );
+    }
     return redirectToApp(env, '/?sign=approved#sign');
   }
 
