@@ -9,6 +9,15 @@
 - `/api/send` — анонимная отправка сообщения в Telegram;
 - refresh token Spotify и короткий rate limit Telegram хранятся в Cloudflare KV.
 
+Sign-карточки обслуживаются отдельным Replit API:
+
+```text
+https://red-l-1-zar-links-rusapi.replit.app/api/sign/*
+```
+
+Production frontend выбирает этот адрес автоматически. Переменная
+`VITE_SIGN_API_BASE_URL` позволяет переопределить его при сборке.
+
 ## Рекомендуемая схема для пользователей из России
 
 Чтобы не отдавать первый экран через Cloudflare, frontend можно разместить в

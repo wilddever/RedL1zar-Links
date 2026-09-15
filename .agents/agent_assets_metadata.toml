@@ -112,3 +112,17 @@ mtime_ms = 1789464055763
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/f0dd6426-5d7f-43e7-8ce8-f52bd45af2e8/ccc22e80-e47c-44e4-a5e8-3c6accd0eeb8"
 storage_version_token = "1789464063089528"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "Wj3w1StYiRIwzfOlFEw-P"
+uri = "file://deliverables/redl1zar-vk-cloud-dist.zip"
+type = "unspecified"
+title = "Новая сборка frontend для VK Cloud"
+description = "Готовый архив содержимого cloudflare/dist: index.html и assets/. Внутри уже настроена отправка /api/sign/* напрямую в Replit API red-l-1-zar-links-rusapi.replit.app."
+logical_id = "be9a76cd-d237-4c93-ad71-e7a737671494"
+content_hash = "sha256:31c5e72defe055c3f35e466566ce10d01888447e407bfb535b90a14cc807b14e"
+size = 577507
+mtime_ms = 1789467370074
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:5dc576e9-b888-4a98-99cf-1badbbeb304c/be9a76cd-d237-4c93-ad71-e7a737671494/d90586c8-b8be-4f9e-b3c0-ceff7317daa8"
+storage_version_token = "1789467381403170"
+content_type = "application/octet-stream"

@@ -12,6 +12,7 @@ import {
   getCurrentSteamGame,
   getCurrentSpotifyTrack,
   apiUrl,
+  signApiUrl,
   spotifyCoverApiUrl,
   type SteamCurrentlyPlaying,
   type SpotifyCurrentlyPlaying,
@@ -846,7 +847,7 @@ function createSignRequestId() {
 async function sendPendingSign(item: PendingSign) {
   const imageBlob = await fetch(item.imageDataUrl).then((response) => response.blob());
   const response = await fetch(
-    apiUrl(
+    signApiUrl(
       `/api/sign/cards?nickname=${encodeURIComponent(item.nickname)}&requestId=${item.requestId}`,
     ),
     {
@@ -935,7 +936,7 @@ function SignView() {
     setWallStatus('loading');
     setWallError('');
 
-    fetch(apiUrl('/api/sign/wall'), {
+    fetch(signApiUrl('/api/sign/wall'), {
       cache: 'no-store',
       credentials: 'include',
       signal: controller.signal,
