@@ -1310,6 +1310,18 @@
   line-height: 1.55;
 }
 
+.sign-intro .sign-warning {
+  max-width: 440px;
+  margin-top: 1rem;
+  padding: .65rem .8rem;
+  border: 1px solid rgba(255, 92, 92, .72);
+  border-radius: .45rem;
+  background: rgba(112, 16, 16, .16);
+  color: #ffb0b0;
+  font-size: .72rem;
+  line-height: 1.45;
+}
+
 .sign-form {
   max-width: 820px;
   margin-top: 4rem;
