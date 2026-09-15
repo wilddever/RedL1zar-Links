@@ -87,6 +87,7 @@ const SIGN_WALL_KEY = 'sign:wall';
 const SIGN_SUBMISSION_PREFIX = 'sign:submission:';
 const SIGN_IMAGE_PREFIX = 'sign:image:';
 const SIGN_IDEMPOTENCY_PREFIX = 'sign:idempotency:';
+const SIGN_NOTIFICATION_PREFIX = 'sign:notification:';
 const SIGN_RATE_PREFIX = 'sign-rate:';
 const SIGN_MAX_NICKNAME_LENGTH = 48;
 const SIGN_MAX_IMAGE_BYTES = 600_000;
@@ -249,6 +250,48 @@ async function retrySignNotification(operation: () => Promise<boolean>) {
   return false;
 }
 
+async function sendPendingSignNotification(
+  botToken: string,
+  chatId: string,
+  sessionSecret: string,
+  requestUrl: string,
+  id: string,
+  nickname: string,
+  imageBytes: Uint8Array,
+) {
+  const approveToken = await createSignModerationToken(
+    sessionSecret,
+    id,
+    'approve',
+  );
+  const rejectToken = await createSignModerationToken(
+    sessionSecret,
+    id,
+    'reject',
+  );
+  const createModerationUrl = (
+    action: 'approve' | 'reject',
+    token: string,
+  ) => {
+    const moderationUrl = new URL('/api/sign/moderate', requestUrl);
+    moderationUrl.searchParams.set('id', id);
+    moderationUrl.searchParams.set('action', action);
+    moderationUrl.searchParams.set('token', token);
+    return moderationUrl.toString();
+  };
+  const caption = [
+    'Новая sign-карточка RedL1zar',
+    `Ник: ${nickname}`,
+    '',
+    `APPROVE: ${createModerationUrl('approve', approveToken)}`,
+    `REJECT: ${createModerationUrl('reject', rejectToken)}`,
+  ].join('\n');
+
+  return retrySignNotification(() =>
+    sendSignModerationPhoto(botToken, chatId, imageBytes, caption),
+  );
+}
+
 function getSpotifyCoverCacheKey(request: Request, imageUrl: string) {
   const cacheUrl = new URL('/api/spotify/cover', request.url);
   cacheUrl.searchParams.set('url', imageUrl);
@@ -379,6 +422,10 @@ function signImageKey(id: string) {
 
 function signIdempotencyKey(requestId: string) {
   return `${SIGN_IDEMPOTENCY_PREFIX}${requestId}`;
+}
+
+function signNotificationKey(id: string) {
+  return `${SIGN_NOTIFICATION_PREFIX}${id}`;
 }
 
 async function createSignModerationToken(
@@ -1333,13 +1380,6 @@ async function handleApi(
       );
     }
 
-    if (requestId) {
-      const existingId = await env.SPOTIFY_KV.get(signIdempotencyKey(requestId));
-      if (existingId) {
-        return noStore({ ok: true, id: existingId, deduplicated: true });
-      }
-    }
-
     const botToken = env.TELEGRAM_BOT_TOKEN?.trim();
     const chatId = env.TELEGRAM_CHAT_ID?.trim();
     const sessionSecret = env.SESSION_SECRET?.trim();
@@ -1348,6 +1388,62 @@ async function handleApi(
         { ok: false, message: 'Модерация пока не подключена.' },
         503,
       );
+    }
+
+    if (requestId) {
+      const existingId = await env.SPOTIFY_KV.get(signIdempotencyKey(requestId));
+      if (existingId) {
+        if (await env.SPOTIFY_KV.get(signNotificationKey(existingId))) {
+          return noStore({ ok: true, id: existingId, deduplicated: true });
+        }
+
+        const [rawSubmission, existingImage] = await Promise.all([
+          env.SPOTIFY_KV.get(signSubmissionKey(existingId)),
+          env.SPOTIFY_KV.get(signImageKey(existingId)),
+        ]);
+        if (!rawSubmission || !existingImage) {
+          return noStore(
+            { ok: false, message: 'Не удалось восстановить заявку для повтора.' },
+            409,
+          );
+        }
+
+        let existingSubmission: SignSubmission;
+        let existingBytes: Uint8Array;
+        try {
+          existingSubmission = JSON.parse(rawSubmission) as SignSubmission;
+          existingBytes = decodeBase64(existingImage);
+        } catch {
+          return noStore({ ok: false, message: 'Заявка повреждена.' }, 500);
+        }
+        if (existingSubmission.status !== 'pending') {
+          return noStore({ ok: true, id: existingId, deduplicated: true });
+        }
+
+        const delivered = await sendPendingSignNotification(
+          botToken,
+          chatId,
+          sessionSecret,
+          request.url,
+          existingId,
+          existingSubmission.nickname,
+          existingBytes,
+        );
+        if (!delivered) {
+          return noStore(
+            {
+              ok: false,
+              id: existingId,
+              message: 'Заявка сохранена, но Telegram пока не подтвердил доставку.',
+            },
+            502,
+          );
+        }
+        await env.SPOTIFY_KV.put(signNotificationKey(existingId), 'delivered', {
+          expirationTtl: 7 * 24 * 60 * 60,
+        });
+        return noStore({ ok: true, id: existingId, deduplicated: true });
+      }
     }
 
     const clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
@@ -1367,34 +1463,6 @@ async function handleApi(
       createdAt,
       status: 'pending',
     };
-    const approveToken = await createSignModerationToken(
-      sessionSecret,
-      id,
-      'approve',
-    );
-    const rejectToken = await createSignModerationToken(
-      sessionSecret,
-      id,
-      'reject',
-    );
-    const createModerationUrl = (
-      action: 'approve' | 'reject',
-      token: string,
-    ) => {
-      const moderationUrl = new URL('/api/sign/moderate', request.url);
-      moderationUrl.searchParams.set('id', id);
-      moderationUrl.searchParams.set('action', action);
-      moderationUrl.searchParams.set('token', token);
-      return moderationUrl.toString();
-    };
-    const caption = [
-      'Новая sign-карточка RedL1zar',
-      `Ник: ${nickname}`,
-      '',
-      `APPROVE: ${createModerationUrl('approve', approveToken)}`,
-      `REJECT: ${createModerationUrl('reject', rejectToken)}`,
-    ].join('\n');
-
     await env.SPOTIFY_KV.put(rateKey, '1', { expirationTtl: 60 * 60 });
     await env.SPOTIFY_KV.put(signImageKey(id), imageBase64);
     await env.SPOTIFY_KV.put(signSubmissionKey(id), JSON.stringify(submission));
@@ -1404,12 +1472,29 @@ async function handleApi(
       });
     }
 
-    ctx.waitUntil(
-      retrySignNotification(() =>
-        sendSignModerationPhoto(botToken, chatId, imageBytes, caption),
-      ),
+    const delivered = await sendPendingSignNotification(
+      botToken,
+      chatId,
+      sessionSecret,
+      request.url,
+      id,
+      nickname,
+      imageBytes,
     );
-    return noStore({ ok: true, id });
+    if (!delivered) {
+      return noStore(
+        {
+          ok: false,
+          id,
+          message: 'Заявка сохранена, но Telegram пока не подтвердил доставку.',
+        },
+        502,
+      );
+    }
+    await env.SPOTIFY_KV.put(signNotificationKey(id), 'delivered', {
+      expirationTtl: 7 * 24 * 60 * 60,
+    });
+    return noStore({ ok: true, id, telegramDelivered: true });
   }
 
   if (url.pathname === '/api/sign/moderate' && request.method === 'GET') {
