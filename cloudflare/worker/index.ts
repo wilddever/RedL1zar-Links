@@ -449,9 +449,10 @@ async function isValidSignModerationToken(
   );
 }
 
-function createSignImageDataUrl(request: Request, id: string) {
+function createSignImageDataUrl(request: Request, id: string, cacheVersion?: string) {
   const imageUrl = new URL('/api/sign/image', request.url);
   imageUrl.searchParams.set('id', id);
+  if (cacheVersion) imageUrl.searchParams.set('v', cacheVersion);
   return imageUrl.toString();
 }
 
@@ -1286,7 +1287,7 @@ async function handleApi(
     return noStore({
       cards: wall.slice(0, SIGN_WALL_LIMIT).map((card) => ({
         ...card,
-        imageUrl: createSignImageDataUrl(request, card.id),
+        imageUrl: createSignImageDataUrl(request, card.id, card.createdAt),
       })),
     });
   }
@@ -1306,8 +1307,9 @@ async function handleApi(
       return new Response(imageBytes, {
         headers: {
           'Cache-Control':
-            'public, max-age=300, s-maxage=86400, stale-while-revalidate=604800',
+            'public, max-age=60, s-maxage=300, stale-while-revalidate=300, stale-if-error=60',
           'Content-Type': 'image/png',
+          'Content-Disposition': `inline; filename="sign-${id}.png"`,
           'X-Content-Type-Options': 'nosniff',
         },
       });
