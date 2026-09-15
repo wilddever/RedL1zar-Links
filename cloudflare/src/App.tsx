@@ -779,8 +779,8 @@ function formatSignDate(value: string) {
 
 function createSignUploadBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   const exportCanvas = document.createElement('canvas');
-  exportCanvas.width = 720;
-  exportCanvas.height = 336;
+  exportCanvas.width = 900;
+  exportCanvas.height = 420;
   const context = exportCanvas.getContext('2d');
   if (!context) return Promise.reject(new Error('Canvas is unavailable.'));
   context.fillStyle = '#eee4d3';
