@@ -1,10 +1,9 @@
-import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import express, { Router, type IRouter } from "express";
-import { and, desc, eq, lte, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import {
   db,
   signNotificationsTable,
-  signRateLimitsTable,
   signSubmissionsTable,
 } from "@workspace/db";
 import {
@@ -18,7 +17,6 @@ const router: IRouter = Router();
 const MAX_NICKNAME_LENGTH = 48;
 const MAX_IMAGE_BYTES = 600_000;
 const WALL_LIMIT = 120;
-const RATE_LIMIT_MS = 60 * 60 * 1_000;
 const NOTIFICATION_RETRY_DELAYS_MS = [0, 1_000, 5_000];
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
@@ -63,10 +61,6 @@ function getModerationUrl(
 
 function getRedirectOrigin(): string {
   return process.env.PUBLIC_APP_ORIGIN?.trim() || "https://xn--d1ax3b.fun";
-}
-
-function hashIp(ip: string): string {
-  return createHash("sha256").update(ip).digest("hex");
 }
 
 function createModerationToken(secret: string, id: string, action: SignAction) {
@@ -398,25 +392,12 @@ router.post(
       }
     }
 
-    const ipHash = hashIp(req.ip || req.get("x-forwarded-for") || "unknown");
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + RATE_LIMIT_MS);
     const id = randomBytes(16).toString("hex");
     const imagePath = getSignImagePath(id);
-    let submission: typeof signSubmissionsTable.$inferSelect | undefined;
+    let submission: typeof signSubmissionsTable.$inferSelect;
     try {
       submission = await db.transaction(async (tx) => {
-        await tx
-          .delete(signRateLimitsTable)
-          .where(
-            and(eq(signRateLimitsTable.ipHash, ipHash), lte(signRateLimitsTable.expiresAt, now)),
-          );
-        const [rateLimit] = await tx
-          .insert(signRateLimitsTable)
-          .values({ ipHash, expiresAt })
-          .onConflictDoNothing()
-          .returning();
-        if (!rateLimit) return undefined;
         const [created] = await tx
           .insert(signSubmissionsTable)
           .values({
@@ -436,18 +417,12 @@ router.post(
       res.status(500).json({ ok: false, message: "Не удалось сохранить заявку." });
       return;
     }
-    if (!submission) {
-      res.status(429).json({ ok: false, message: "Можно отправлять только одну карточку в час." });
-      return;
-    }
-
     try {
       await saveSignImage(imagePath, bytes);
     } catch (error) {
       req.log.error({ err: error, id }, "Failed to persist sign image");
       await db.transaction(async (tx) => {
         await tx.delete(signSubmissionsTable).where(eq(signSubmissionsTable.id, id));
-        await tx.delete(signRateLimitsTable).where(eq(signRateLimitsTable.ipHash, ipHash));
       });
       res.status(500).json({ ok: false, message: "Не удалось сохранить заявку." });
       return;

@@ -12,3 +12,4 @@
 - [Replit Git publishing](replit-git-publish.md) — pushing main updates source control, but production still needs Replit Publish unless external CI/CD is configured.
 - [Cloudflare npm build](cloudflare-build-workspace.md) — the Cloudflare package must avoid PNPM `workspace:` dependencies because its remote build runs `npm ci` from `cloudflare/`.
 - [Replit production data](replit-production-data.md) — publishing code does not copy existing development PostgreSQL rows into an already provisioned production database.
+- [Sign submission rate limit](sign-rate-limit.md) — public submissions are unlimited by decision; requestId idempotency still prevents duplicate retries.
