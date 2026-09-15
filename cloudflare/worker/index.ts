@@ -52,7 +52,7 @@ type SignSubmission = {
   id: string;
   nickname: string;
   createdAt: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'deleted';
 };
 
 type SignWallCard = {
@@ -60,6 +60,8 @@ type SignWallCard = {
   nickname: string;
   createdAt: string;
 };
+
+type SignModerationAction = 'approve' | 'reject' | 'delete';
 
 const SPOTIFY_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize';
 const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
@@ -88,6 +90,7 @@ const SIGN_RATE_PREFIX = 'sign-rate:';
 const SIGN_MAX_NICKNAME_LENGTH = 48;
 const SIGN_MAX_IMAGE_BYTES = 600_000;
 const SIGN_WALL_LIMIT = 120;
+const SIGN_NOTIFICATION_RETRY_DELAYS_MS = [0, 1_000, 5_000];
 
 let accessTokenCache: { accessToken: string; expiresAt: number } | undefined;
 let refreshInFlight: Promise<string | null> | undefined;
@@ -204,6 +207,47 @@ async function sendSignModerationPhoto(
   return payload?.ok === true;
 }
 
+async function sendSignDeletionNotice(
+  botToken: string,
+  chatId: string,
+  nickname: string,
+  deleteUrl: string,
+) {
+  const response = await fetchWithTimeout(
+    `https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendMessage`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: `Сигна ${nickname} опубликована на стене.`,
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[{ text: 'Удалить со стены', url: deleteUrl }]],
+        },
+      }),
+    },
+    8_000,
+  );
+  if (!response.ok) return false;
+  const payload = (await response.json().catch(() => null)) as
+    | { ok?: boolean }
+    | null;
+  return payload?.ok === true;
+}
+
+async function retrySignNotification(operation: () => Promise<boolean>) {
+  for (const delayMs of SIGN_NOTIFICATION_RETRY_DELAYS_MS) {
+    if (delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    try {
+      if (await operation()) return true;
+    } catch {}
+  }
+  return false;
+}
+
 function getSpotifyCoverCacheKey(request: Request, imageUrl: string) {
   const cacheUrl = new URL('/api/spotify/cover', request.url);
   cacheUrl.searchParams.set('url', imageUrl);
@@ -316,7 +360,7 @@ function signImageKey(id: string) {
 async function createSignModerationToken(
   sessionSecret: string,
   id: string,
-  action: 'approve' | 'reject',
+  action: SignModerationAction,
 ) {
   return hmacHex(sessionSecret, `sign-moderate:${id}:${action}`);
 }
@@ -324,7 +368,7 @@ async function createSignModerationToken(
 async function isValidSignModerationToken(
   sessionSecret: string,
   id: string,
-  action: 'approve' | 'reject',
+  action: SignModerationAction,
   token: string | null,
 ) {
   if (!token || !/^[a-f0-9]{64}$/.test(token)) return false;
