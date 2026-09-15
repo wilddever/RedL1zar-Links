@@ -794,6 +794,99 @@ function createSignUploadBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   });
 }
 
+type PendingSign = {
+  requestId: string;
+  nickname: string;
+  imageDataUrl: string;
+  createdAt: string;
+};
+
+const SIGN_OUTBOX_STORAGE_KEY = 'redl1zar:sign-outbox:v1';
+let signOutboxFlushPromise: Promise<void> | null = null;
+
+function readSignOutbox(): PendingSign[] {
+  try {
+    const raw = window.localStorage.getItem(SIGN_OUTBOX_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item): item is PendingSign =>
+        typeof item?.requestId === 'string' &&
+        /^[a-f0-9]{32}$/.test(item.requestId) &&
+        typeof item?.nickname === 'string' &&
+        typeof item?.imageDataUrl === 'string' &&
+        item.imageDataUrl.startsWith('data:image/png;base64,'),
+    );
+  } catch {
+    return [];
+  }
+}
+
+function writeSignOutbox(items: PendingSign[]) {
+  window.localStorage.setItem(SIGN_OUTBOX_STORAGE_KEY, JSON.stringify(items));
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error('Could not save the drawing.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function createSignRequestId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID().replace(/-/g, '');
+  }
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function sendPendingSign(item: PendingSign) {
+  const imageBlob = await fetch(item.imageDataUrl).then((response) => response.blob());
+  const response = await fetch(
+    apiUrl(
+      `/api/sign/cards?nickname=${encodeURIComponent(item.nickname)}&requestId=${item.requestId}`,
+    ),
+    {
+      method: 'POST',
+      cache: 'no-store',
+      credentials: 'include',
+      headers: { 'Content-Type': 'image/png' },
+      body: imageBlob,
+    },
+  );
+  const result = (await response.json().catch(() => null)) as
+    | { ok?: boolean; id?: string; message?: string }
+    | null;
+  if (!response.ok || !result?.ok || !result.id) {
+    throw new Error(result?.message ?? 'Your mark could not be submitted.');
+  }
+}
+
+async function flushSignOutbox() {
+  if (signOutboxFlushPromise) return signOutboxFlushPromise;
+  signOutboxFlushPromise = (async () => {
+    for (const item of readSignOutbox()) {
+      let delivered = false;
+      for (const delayMs of [0, 1_000, 5_000]) {
+        if (delayMs) await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+        try {
+          await sendPendingSign(item);
+          delivered = true;
+          break;
+        } catch {}
+      }
+      if (!delivered) break;
+      writeSignOutbox(readSignOutbox().filter((queued) => queued.requestId !== item.requestId));
+    }
+  })().finally(() => {
+    signOutboxFlushPromise = null;
+  });
+  return signOutboxFlushPromise;
+}
+
 function SignView() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
@@ -802,7 +895,7 @@ function SignView() {
   const [nickname, setNickname] = useState('');
   const [tool, setTool] = useState<'marker' | 'eraser'>('marker');
   const [submitStatus, setSubmitStatus] = useState<
-    'idle' | 'sending' | 'sent' | 'error'
+    'idle' | 'queued' | 'sent' | 'error'
   >('idle');
   const [submitMessage, setSubmitMessage] = useState('');
   const [wallCards, setWallCards] = useState<SignCard[]>([]);
@@ -870,6 +963,22 @@ function SignView() {
 
     return () => controller.abort();
   }, [wallReloadKey]);
+
+  useEffect(() => {
+    const flush = () => {
+      void flushSignOutbox();
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') flush();
+    };
+    flush();
+    window.addEventListener('online', flush);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('online', flush);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
 
   const getCanvasPoint = (event: ReactPointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -945,33 +1054,26 @@ function SignView() {
     event.preventDefault();
     const trimmedNickname = nickname.trim();
     const canvas = canvasRef.current;
-    if (!trimmedNickname || !canvas || !hasDrawingRef.current || submitStatus === 'sending') {
+    if (!trimmedNickname || !canvas || !hasDrawingRef.current || submitStatus === 'queued') {
       return;
     }
 
-    setSubmitStatus('sending');
+    setSubmitStatus('queued');
     setSubmitMessage('');
     try {
       const imageBlob = await createSignUploadBlob(canvas);
-      const response = await fetch(
-        apiUrl(`/api/sign/cards?nickname=${encodeURIComponent(trimmedNickname)}`),
-        {
-        method: 'POST',
-        credentials: 'include',
-          headers: { 'Content-Type': 'image/png' },
-          body: imageBlob,
-        },
-      );
-      const result = (await response.json().catch(() => null)) as
-        | { ok?: boolean; id?: string; message?: string }
-        | null;
-      if (!response.ok || !result?.ok || !result.id) {
-        throw new Error(result?.message ?? 'Your mark could not be submitted.');
-      }
+      const item: PendingSign = {
+        requestId: createSignRequestId(),
+        nickname: trimmedNickname,
+        imageDataUrl: await blobToDataUrl(imageBlob),
+        createdAt: new Date().toISOString(),
+      };
+      writeSignOutbox([...readSignOutbox(), item]);
       setNickname('');
       clearCanvas();
       setSubmitStatus('sent');
-      setSubmitMessage('Mark sent for moderation. Thank you.');
+      setSubmitMessage('Mark queued for moderation. You can continue.');
+      void flushSignOutbox();
     } catch (error) {
       setSubmitStatus('error');
       setSubmitMessage(
@@ -1068,10 +1170,10 @@ function SignView() {
           <button
             className="send-submit sign-submit"
             data-testid="button-submit-signature"
-            disabled={submitStatus === 'sending' || !nickname.trim() || !hasDrawing}
+             disabled={submitStatus === 'queued' || !nickname.trim() || !hasDrawing}
             type="submit"
           >
-            {submitStatus === 'sending' ? 'sending…' : 'leave mark ↗'}
+             {submitStatus === 'queued' ? 'saving…' : 'leave mark ↗'}
           </button>
         </div>
         {submitMessage ? (

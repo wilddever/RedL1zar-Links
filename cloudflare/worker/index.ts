@@ -86,6 +86,7 @@ const SPOTIFY_COVER_RETRY_DELAY_MS = 150;
 const SIGN_WALL_KEY = 'sign:wall';
 const SIGN_SUBMISSION_PREFIX = 'sign:submission:';
 const SIGN_IMAGE_PREFIX = 'sign:image:';
+const SIGN_IDEMPOTENCY_PREFIX = 'sign:idempotency:';
 const SIGN_RATE_PREFIX = 'sign-rate:';
 const SIGN_MAX_NICKNAME_LENGTH = 48;
 const SIGN_MAX_IMAGE_BYTES = 600_000;
@@ -374,6 +375,10 @@ function signSubmissionKey(id: string) {
 
 function signImageKey(id: string) {
   return `${SIGN_IMAGE_PREFIX}${id}`;
+}
+
+function signIdempotencyKey(requestId: string) {
+  return `${SIGN_IDEMPOTENCY_PREFIX}${requestId}`;
 }
 
 async function createSignModerationToken(
@@ -1266,6 +1271,7 @@ async function handleApi(
 
   if (url.pathname === '/api/sign/cards' && request.method === 'POST') {
     const contentType = request.headers.get('Content-Type')?.split(';', 1)[0].trim();
+    const requestId = url.searchParams.get('requestId')?.trim() || '';
     let nickname = '';
     let imageBase64 = '';
     let imageBytes: Uint8Array;
@@ -1314,6 +1320,9 @@ async function handleApi(
       );
     }
 
+    if (requestId && !/^[a-f0-9]{32}$/.test(requestId)) {
+      return noStore({ ok: false, message: 'Некорректный идентификатор заявки.' }, 400);
+    }
     if (!isPng(imageBytes)) {
       return noStore({ ok: false, message: 'Нужен корректный PNG-файл.' }, 400);
     }
@@ -1322,6 +1331,13 @@ async function handleApi(
         { ok: false, message: 'Рисунок слишком большой. Попробуйте сделать его проще.' },
         413,
       );
+    }
+
+    if (requestId) {
+      const existingId = await env.SPOTIFY_KV.get(signIdempotencyKey(requestId));
+      if (existingId) {
+        return noStore({ ok: true, id: existingId, deduplicated: true });
+      }
     }
 
     const botToken = env.TELEGRAM_BOT_TOKEN?.trim();
@@ -1382,6 +1398,11 @@ async function handleApi(
     await env.SPOTIFY_KV.put(rateKey, '1', { expirationTtl: 60 * 60 });
     await env.SPOTIFY_KV.put(signImageKey(id), imageBase64);
     await env.SPOTIFY_KV.put(signSubmissionKey(id), JSON.stringify(submission));
+    if (requestId) {
+      await env.SPOTIFY_KV.put(signIdempotencyKey(requestId), id, {
+        expirationTtl: 7 * 24 * 60 * 60,
+      });
+    }
 
     ctx.waitUntil(
       retrySignNotification(() =>
