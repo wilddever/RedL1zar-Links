@@ -11,3 +11,4 @@
 - [Spotify cover delivery](spotify-cover-delivery.md) — serve the cached proxy URL directly to img elements; avoid a second fetch-to-Blob pipeline in the browser.
 - [Replit Git publishing](replit-git-publish.md) — pushing main updates source control, but production still needs Replit Publish unless external CI/CD is configured.
 - [Cloudflare npm build](cloudflare-build-workspace.md) — the Cloudflare package must avoid PNPM `workspace:` dependencies because its remote build runs `npm ci` from `cloudflare/`.
+- [Replit production data](replit-production-data.md) — publishing code does not copy existing development PostgreSQL rows into an already provisioned production database.
