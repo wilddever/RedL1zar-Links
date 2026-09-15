@@ -4,7 +4,10 @@
 
 ## Run & Operate
 
+- Replit Preview uses the managed workflows `artifacts/personal-links: web` and `artifacts/api-server: API Server`.
+- `pnpm --filter @workspace/personal-links run dev` — run the frontend manually (requires `PORT` and `BASE_PATH`)
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/db run push` — apply the development database schema
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
