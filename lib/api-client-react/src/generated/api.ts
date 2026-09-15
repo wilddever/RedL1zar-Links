@@ -21,11 +21,16 @@ import type {
 
 import type {
   FindYandexTrackParams,
+  GetSignImageParams,
   HealthStatus,
+  ModerateSignCardParams,
   SendMessageRequest,
   SendMessageResponse,
+  SignCardSubmitResponse,
+  SignWallResponse,
   SpotifyCurrentlyPlaying,
   SteamCurrentlyPlaying,
+  SubmitSignCardParams,
   YandexTrackLink
 } from './api.schemas';
 
@@ -131,9 +136,6 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
-
-
-
 export const getGetCurrentSpotifyTrackUrl = () => {
 
 
@@ -206,12 +208,6 @@ export function useGetCurrentSpotifyTrack<TData = Awaited<ReturnType<typeof getC
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-
 export const getGetCurrentSteamGameUrl = () => {
 
 
@@ -283,13 +279,6 @@ export function useGetCurrentSteamGame<TData = Awaited<ReturnType<typeof getCurr
 
   return withQueryKey(query, queryOptions.queryKey);
 }
-
-
-
-
-
-
-
 export const getFindYandexTrackUrl = (params: FindYandexTrackParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -462,3 +451,337 @@ export const useSendAnonymousMessage = <TError = ErrorType<void>,
       return useMutation(getSendAnonymousMessageMutationOptions(options));
     }
 
+export const getGetSignWallUrl = () => {
+
+
+
+
+  return `/api/sign/wall`
+}
+
+/**
+ * @summary Get approved sign cards
+ */
+export const getSignWall = async ( options?: Parameters<typeof customFetch>[1]): Promise<SignWallResponse> => {
+
+  return customFetch<SignWallResponse>(getGetSignWallUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSignWallQueryKey = () => {
+    return [
+    `/api/sign/wall`
+    ] as const;
+    }
+
+
+export const getGetSignWallQueryOptions = <TData = Awaited<ReturnType<typeof getSignWall>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSignWall>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSignWallQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSignWall>>> = ({ signal }) => getSignWall({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSignWall>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSignWallQueryResult = NonNullable<Awaited<ReturnType<typeof getSignWall>>>
+export type GetSignWallQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get approved sign cards
+ */
+
+export function useGetSignWall<TData = Awaited<ReturnType<typeof getSignWall>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSignWall>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSignWallQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetSignImageUrl = (params: GetSignImageParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/sign/image?${stringifiedParams}` : `/api/sign/image`
+}
+
+/**
+ * @summary Get an approved sign-card PNG
+ */
+export const getSignImage = async (params: GetSignImageParams, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetSignImageUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSignImageQueryKey = (params?: GetSignImageParams,) => {
+    return [
+    `/api/sign/image`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSignImageQueryOptions = <TData = Awaited<ReturnType<typeof getSignImage>>, TError = ErrorType<void>>(params: GetSignImageParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSignImage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSignImageQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSignImage>>> = ({ signal }) => getSignImage(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSignImage>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSignImageQueryResult = NonNullable<Awaited<ReturnType<typeof getSignImage>>>
+export type GetSignImageQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get an approved sign-card PNG
+ */
+
+export function useGetSignImage<TData = Awaited<ReturnType<typeof getSignImage>>, TError = ErrorType<void>>(
+ params: GetSignImageParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSignImage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSignImageQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSubmitSignCardUrl = (params?: SubmitSignCardParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/sign/cards?${stringifiedParams}` : `/api/sign/cards`
+}
+
+/**
+ * @summary Submit a sign card for moderation
+ */
+export const submitSignCard = async (submitSignCardBody: Blob,
+    params?: SubmitSignCardParams, options?: Parameters<typeof customFetch>[1]): Promise<SignCardSubmitResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SignCardSubmitResponse>(getSubmitSignCardUrl(params),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'image/png', ...getHeaders(options?.headers) },
+    body: submitSignCardBody
+  }
+);}
+
+
+
+
+
+export const getSubmitSignCardMutationKey = () => ['submitSignCard'] as const;
+
+export const getSubmitSignCardMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitSignCard>>, TError,SubmitSignCardMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitSignCard>>, TError,SubmitSignCardMutationVariables, TContext> => {
+
+const mutationKey = getSubmitSignCardMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitSignCard>>, SubmitSignCardMutationVariables> = (props) => {
+          const {data,params} = props ?? {};
+
+          return  submitSignCard(data,params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitSignCardMutationResult = NonNullable<Awaited<ReturnType<typeof submitSignCard>>>
+    export type SubmitSignCardMutationBody = BodyType<Blob>
+    export type SubmitSignCardMutationError = ErrorType<void>
+    export type SubmitSignCardMutationVariables = {data: BodyType<Blob>;params?: SubmitSignCardParams}
+
+    /**
+ * @summary Submit a sign card for moderation
+ */
+export const useSubmitSignCard = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitSignCard>>, TError,SubmitSignCardMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitSignCard>>,
+        TError,
+        SubmitSignCardMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSubmitSignCardMutationOptions(options));
+    }
+
+export const getModerateSignCardUrl = (params: ModerateSignCardParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/sign/moderate?${stringifiedParams}` : `/api/sign/moderate`
+}
+
+/**
+ * @summary Approve, reject, or delete a sign card
+ */
+export const moderateSignCard = async (params: ModerateSignCardParams, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
+
+  return customFetch<unknown>(getModerateSignCardUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getModerateSignCardQueryKey = (params?: ModerateSignCardParams,) => {
+    return [
+    `/api/sign/moderate`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getModerateSignCardQueryOptions = <TData = Awaited<ReturnType<typeof moderateSignCard>>, TError = ErrorType<void>>(params: ModerateSignCardParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof moderateSignCard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModerateSignCardQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof moderateSignCard>>> = ({ signal }) => moderateSignCard(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof moderateSignCard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ModerateSignCardQueryResult = NonNullable<Awaited<ReturnType<typeof moderateSignCard>>>
+export type ModerateSignCardQueryError = ErrorType<void>
+
+
+/**
+ * @summary Approve, reject, or delete a sign card
+ */
+
+export function useModerateSignCard<TData = Awaited<ReturnType<typeof moderateSignCard>>, TError = ErrorType<void>>(
+ params: ModerateSignCardParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof moderateSignCard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getModerateSignCardQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

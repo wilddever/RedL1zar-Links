@@ -18,6 +18,8 @@ tags:
     description: Yandex Music track lookup
   - name: messages
     description: Anonymous messages
+  - name: sign
+    description: Moderated sign-card wall
 paths:
   /healthz:
     get:
@@ -110,6 +112,115 @@ paths:
           description: Rate limit exceeded
         "503":
           description: Telegram is not configured
+  /sign/wall:
+    get:
+      operationId: getSignWall
+      tags: [sign]
+      summary: Get approved sign cards
+      responses:
+        "200":
+          description: Approved cards shown on the wall
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignWallResponse"
+  /sign/image:
+    get:
+      operationId: getSignImage
+      tags: [sign]
+      summary: Get an approved sign-card PNG
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-f0-9]{32}$"
+      responses:
+        "200":
+          description: PNG image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Image not found
+  /sign/cards:
+    post:
+      operationId: submitSignCard
+      tags: [sign]
+      summary: Submit a sign card for moderation
+      parameters:
+        - name: nickname
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 48
+        - name: requestId
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: "^[a-f0-9]{32}$"
+      requestBody:
+        required: true
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Submitted or deduplicated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignCardSubmitResponse"
+        "400":
+          description: Invalid sign card
+        "413":
+          description: PNG is too large
+        "429":
+          description: One card per IP per hour
+        "502":
+          description: Telegram delivery is pending
+        "503":
+          description: Moderation is not configured
+  /sign/moderate:
+    get:
+      operationId: moderateSignCard
+      tags: [sign]
+      summary: Approve, reject, or delete a sign card
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-f0-9]{32}$"
+        - name: action
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [approve, reject, delete]
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to the public page after moderation
+        "403":
+          description: Invalid moderation URL
+        "404":
+          description: Card not found
+        "409":
+          description: Card is already processed or cannot be deleted
 components:
   schemas:
     HealthStatus:
@@ -226,6 +337,57 @@ components:
           type: boolean
       required:
         - ok
+    SignWallCard:
+      type: object
+      properties:
+        id:
+          type: string
+        nickname:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        imageUrl:
+          type: string
+          format: uri
+      required: [id, nickname, createdAt, imageUrl]
+    SignWallResponse:
+      type: object
+      properties:
+        cards:
+          type: array
+          maxItems: 120
+          items:
+            $ref: "#/components/schemas/SignWallCard"
+      required: [cards]
+    SignCardJsonRequest:
+      type: object
+      properties:
+        nickname:
+          type: string
+          minLength: 1
+          maxLength: 48
+        requestId:
+          type: string
+          pattern: "^[a-f0-9]{32}$"
+        image:
+          type: string
+          pattern: "^data:image/png;base64,"
+      required: [nickname, image]
+    SignCardSubmitResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        id:
+          type: string
+        deduplicated:
+          type: boolean
+        telegramDelivered:
+          type: boolean
+        message:
+          type: string
+      required: [ok]
     ErrorMessage:
       type: object
       properties:

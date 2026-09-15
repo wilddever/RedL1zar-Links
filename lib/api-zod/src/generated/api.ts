@@ -80,3 +80,70 @@ export const SendAnonymousMessageResponse = zod.object({
 })
 
 
+/**
+ * @summary Get approved sign cards
+ */
+export const getSignWallResponseCardsMax = 120;
+
+
+
+export const GetSignWallResponse = zod.object({
+  "cards": zod.array(zod.object({
+  "id": zod.string(),
+  "nickname": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "imageUrl": zod.string().url()
+})).max(getSignWallResponseCardsMax)
+})
+
+
+/**
+ * @summary Get an approved sign-card PNG
+ */
+export const getSignImageQueryIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const GetSignImageQueryParams = zod.object({
+  "id": zod.coerce.string().regex(getSignImageQueryIdRegExp)
+})
+
+export const GetSignImageResponse = zod.unknown()
+
+
+/**
+ * @summary Submit a sign card for moderation
+ */
+export const submitSignCardQueryNicknameMax = 48;
+
+export const submitSignCardQueryRequestIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const SubmitSignCardQueryParams = zod.object({
+  "nickname": zod.coerce.string().min(1).max(submitSignCardQueryNicknameMax).optional(),
+  "requestId": zod.coerce.string().regex(submitSignCardQueryRequestIdRegExp).optional()
+})
+
+export const SubmitSignCardResponse = zod.object({
+  "ok": zod.boolean(),
+  "id": zod.string().optional(),
+  "deduplicated": zod.boolean().optional(),
+  "telegramDelivered": zod.boolean().optional(),
+  "message": zod.string().optional()
+})
+
+
+/**
+ * @summary Approve, reject, or delete a sign card
+ */
+export const moderateSignCardQueryIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const ModerateSignCardQueryParams = zod.object({
+  "id": zod.coerce.string().regex(moderateSignCardQueryIdRegExp),
+  "action": zod.enum(['approve', 'reject', 'delete']),
+  "token": zod.coerce.string()
+})
+
+export const ModerateSignCardResponse = zod.void()
+
+

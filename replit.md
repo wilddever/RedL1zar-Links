@@ -14,6 +14,7 @@
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
 - Spotify env: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`, `SESSION_SECRET`, `SPOTIFY_OWNER_TOKEN`
+- Sign moderation env (production secrets, never commit values): `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `SESSION_SECRET`, `PUBLIC_APP_ORIGIN=https://xn--d1ax3b.fun`, and the provisioned App Storage values `DEFAULT_OBJECT_STORAGE_BUCKET_ID`, `PRIVATE_OBJECT_DIR`, and `PUBLIC_OBJECT_SEARCH_PATHS`.
 
 ## Stack
 
@@ -38,6 +39,17 @@
 - Refresh token хранится в PostgreSQL в singleton-строке; браузер получает только публичные данные трека.
 - OAuth state подписывается `SESSION_SECRET` и дополнительно сверяется с HttpOnly cookie.
 - OAuth-подключение владельца защищено `SPOTIFY_OWNER_TOKEN`: первый переход на `/api/spotify/auth?owner_token=...` выдаёт подписанную HttpOnly cookie, после чего токен в URL больше не нужен.
+- Sign-карточки хранят метаданные и статусы в PostgreSQL, а PNG-файлы — только в Replit App Storage. Telegram moderation links are signed with `SESSION_SECRET`.
+
+## Production cutover: VK frontend and sign API
+
+1. Provision App Storage and confirm `PRIVATE_OBJECT_DIR` and `DEFAULT_OBJECT_STORAGE_BUCKET_ID` are present in the API deployment.
+2. Set the production secrets above in the API deployment; generate a long random `SESSION_SECRET` and configure the Telegram bot/chat used for moderation.
+3. Apply the database schema with `pnpm --filter @workspace/db run push` and verify `/api/healthz` on the published API domain.
+4. Publish the API on Replit, then attach `api.xn--d1ax3b.fun` as its custom domain.
+5. In Cloudflare DNS, remove the Worker custom-domain route for `api.xn--d1ax3b.fun` and add the DNS record Replit provides. Keep it DNS-only if Replit's domain verification requires direct resolution.
+6. The VK-hosted frontend can keep its existing `https://api.xn--d1ax3b.fun` sign API URL; verify the raw `image/png` POST contract and CORS from `https://xn--d1ax3b.fun`.
+7. Submit one test card, approve it from Telegram, verify the wall/image URL, then verify reject and delete remove the App Storage object before switching VK traffic.
 
 ## Product
 

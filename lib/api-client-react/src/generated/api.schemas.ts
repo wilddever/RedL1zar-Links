@@ -73,6 +73,38 @@ export interface SendMessageResponse {
   ok: boolean;
 }
 
+export interface SignWallCard {
+  id: string;
+  nickname: string;
+  createdAt: string;
+  imageUrl: string;
+}
+
+export interface SignWallResponse {
+  /** @maxItems 120 */
+  cards: SignWallCard[];
+}
+
+export interface SignCardJsonRequest {
+  /**
+     * @minLength 1
+     * @maxLength 48
+     */
+  nickname: string;
+  /** @pattern ^[a-f0-9]{32}$ */
+  requestId?: string;
+  /** @pattern ^data:image/png;base64, */
+  image: string;
+}
+
+export interface SignCardSubmitResponse {
+  ok: boolean;
+  id?: string;
+  deduplicated?: boolean;
+  telegramDelivered?: boolean;
+  message?: string;
+}
+
 export interface ErrorMessage {
   message: string;
 }
@@ -82,4 +114,41 @@ title: string;
 artist: string;
 album?: string;
 };
+
+export type GetSignImageParams = {
+/**
+ * @pattern ^[a-f0-9]{32}$
+ */
+id: string;
+};
+
+export type SubmitSignCardParams = {
+/**
+ * @minLength 1
+ * @maxLength 48
+ */
+nickname?: string;
+/**
+ * @pattern ^[a-f0-9]{32}$
+ */
+requestId?: string;
+};
+
+export type ModerateSignCardParams = {
+/**
+ * @pattern ^[a-f0-9]{32}$
+ */
+id: string;
+action: ModerateSignCardAction;
+token: string;
+};
+
+export type ModerateSignCardAction = typeof ModerateSignCardAction[keyof typeof ModerateSignCardAction];
+
+
+export const ModerateSignCardAction = {
+  approve: 'approve',
+  reject: 'reject',
+  delete: 'delete',
+} as const;
 
