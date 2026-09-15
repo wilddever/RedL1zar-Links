@@ -9,3 +9,4 @@
 - [Frontend browser regression checks](frontend-browser-regression.md) — proxy API routes and start each frontend with its own Vite command when testing shared browser behavior.
 - [API CORS origins](api-cors-origins.md) — VK Cloud currently serves both HTTP and HTTPS, so the API must allow both origins until HTTPS-only access is enforced.
 - [Spotify cover delivery](spotify-cover-delivery.md) — serve the cached proxy URL directly to img elements; avoid a second fetch-to-Blob pipeline in the browser.
+- [Replit Git publishing](replit-git-publish.md) — pushing main updates source control, but production still needs Replit Publish unless external CI/CD is configured.

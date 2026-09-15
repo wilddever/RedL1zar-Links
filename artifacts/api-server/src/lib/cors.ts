@@ -3,6 +3,8 @@ const fixedOrigins = [
   "http://xn--d1ax3b.fun",
   "https://рэд.fun",
   "http://рэд.fun",
+  "https://red-l-1-zar-links-rusapi.replit.app",
+  "http://red-l-1-zar-links-rusapi.replit.app",
   "https://red-l-1-zar-links.replit.app",
   "http://red-l-1-zar-links.replit.app",
   "http://localhost",

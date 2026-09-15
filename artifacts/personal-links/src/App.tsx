@@ -96,7 +96,7 @@ const runtimeSpotifyCoverApiBaseUrl =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'xn--d1ax3b.fun' ||
     window.location.hostname === 'рэд.fun')
-    ? 'https://red-l-1-zar-links.replit.app'
+    ? 'https://red-l-1-zar-links-rusapi.replit.app'
     : '';
 const spotifyCoverApiBaseUrl = (
   import.meta.env.VITE_SPOTIFY_COVER_API_BASE_URL ??

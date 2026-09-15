@@ -27,7 +27,7 @@ timeoutMs = 20000
 SPOTIFY_REDIRECT_URI = "https://accbc1a2-df19-45ed-84ed-05bd895a2d24-00-1edi1jmx0dqk6.worf.replit.dev/api/spotify/callback"
 
 [userenv.production]
-SPOTIFY_REDIRECT_URI = "https://red-l-1-zar-links.replit.app/api/spotify/callback"
+SPOTIFY_REDIRECT_URI = "https://red-l-1-zar-links-rusapi.replit.app/api/spotify/callback"
 PUBLIC_APP_ORIGIN = "https://xn--d1ax3b.fun"
 
 [nix]
