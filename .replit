@@ -1,4 +1,4 @@
-modules = ["nodejs-24", "python-base-3.13"]
+modules = ["nodejs-20", "web", "bash"]
 
 [deployment]
 router = "application"
@@ -28,3 +28,6 @@ SPOTIFY_REDIRECT_URI = "https://accbc1a2-df19-45ed-84ed-05bd895a2d24-00-1edi1jmx
 
 [userenv.production]
 SPOTIFY_REDIRECT_URI = "https://red-l-1-zar-links.replit.app/api/spotify/callback"
+
+[nix]
+channel = "stable-25_05"
