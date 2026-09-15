@@ -445,7 +445,10 @@ router.post(
       await saveSignImage(imagePath, bytes);
     } catch (error) {
       req.log.error({ err: error, id }, "Failed to persist sign image");
-      await db.delete(signSubmissionsTable).where(eq(signSubmissionsTable.id, id));
+      await db.transaction(async (tx) => {
+        await tx.delete(signSubmissionsTable).where(eq(signSubmissionsTable.id, id));
+        await tx.delete(signRateLimitsTable).where(eq(signRateLimitsTable.ipHash, ipHash));
+      });
       res.status(500).json({ ok: false, message: "Не удалось сохранить заявку." });
       return;
     }
