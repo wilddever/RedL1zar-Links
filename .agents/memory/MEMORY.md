@@ -10,3 +10,4 @@
 - [API CORS origins](api-cors-origins.md) — VK Cloud currently serves both HTTP and HTTPS, so the API must allow both origins until HTTPS-only access is enforced.
 - [Spotify cover delivery](spotify-cover-delivery.md) — serve the cached proxy URL directly to img elements; avoid a second fetch-to-Blob pipeline in the browser.
 - [Replit Git publishing](replit-git-publish.md) — pushing main updates source control, but production still needs Replit Publish unless external CI/CD is configured.
+- [Cloudflare npm build](cloudflare-build-workspace.md) — the Cloudflare package must avoid PNPM `workspace:` dependencies because its remote build runs `npm ci` from `cloudflare/`.
