@@ -69,6 +69,11 @@ https://api.xn--d1ax3b.fun/api/spotify/callback
 5. Выпустите или подключите TLS-сертификат для `xn--d1ax3b.fun`.
 6. В DNS Cloudflare добавьте запись, которую выдаст VK Cloud CDN, для корневого
    домена и оставьте её **DNS only**, без проксирования Cloudflare.
+7. В настройках custom domain/CDN включите обязательный редирект `HTTP → HTTPS`.
+   Одного TLS-сертификата недостаточно: без этого `http://xn--d1ax3b.fun`
+   может продолжать отдавать страницу без шифрования. Если домен обслуживается
+   через Cloudflare Proxy вместо DNS only, включите также zone setting
+   `Always Use HTTPS`.
 
 До переключения DNS проверьте CDN на выданном VK Cloud тестовом адресе. После
 переключения `https://xn--d1ax3b.fun` должен отдавать `index.html`, а

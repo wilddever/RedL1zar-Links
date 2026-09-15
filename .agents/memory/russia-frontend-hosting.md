@@ -14,3 +14,9 @@ The workspace has no VK Cloud Object Storage credentials or upload command; Work
 **Why:** The Worker and regional static host are separate deployment surfaces, and the repository's verification intentionally rejects a stale VK asset hash after a successful Worker deploy.
 
 **How to apply:** Build the Cloudflare frontend, archive the contents of `cloudflare/dist/` with `index.html` at the archive root, upload it to the VK bucket, then run the deployment verification from `cloudflare`.
+
+The VK Cloud root custom domain can serve `200 OK` over plain HTTP even when its HTTPS certificate is valid.
+
+**Why:** A certificate only protects HTTPS; the direct object-storage endpoint does not automatically redirect HTTP, which can surface as an unsafe connection when a VPN or browser opens the HTTP variant.
+
+**How to apply:** Enable HTTP-to-HTTPS redirect on the VK Cloud CDN custom domain (or put the root record behind an HTTPS edge proxy). Keep the early frontend redirect as a fallback, but do not treat it as a replacement for the CDN redirect.

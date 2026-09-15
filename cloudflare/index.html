@@ -19,6 +19,16 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      (() => {
+        const secureHosts = new Set(["xn--d1ax3b.fun", "рэд.fun"]);
+        if (location.protocol === "http:" && secureHosts.has(location.hostname)) {
+          location.replace(
+            `https://${location.host}${location.pathname}${location.search}${location.hash}`,
+          );
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
