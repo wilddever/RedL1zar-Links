@@ -98,3 +98,17 @@ mtime_ms = 1789461877157
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/3c450aff-5185-4c3f-8594-ec722ef36a0b/472c59de-abf8-4faf-b326-df16ed38812b"
 storage_version_token = "1789461884900139"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "jE3tswB59ZVEBZQ_KxAC-"
+uri = "file://deliverables/redl1zar-full-project.zip"
+type = "unspecified"
+title = "Полный проект RedL1zar"
+description = "Полный исходный проект с frontend, Cloudflare Worker, assets, конфигурацией и build-файлами. Размер 24 022 080 байт, ZIP проверен. Исключены только зависимости, служебные файлы среды, отчёты, снимки и старые архивы. SHA256: c3a794fb90d3b9aba61e9e65a9dee3b96fe745737cf292b0f00cf762e7b9cb4e"
+logical_id = "f0dd6426-5d7f-43e7-8ce8-f52bd45af2e8"
+content_hash = "sha256:c3a794fb90d3b9aba61e9e65a9dee3b96fe745737cf292b0f00cf762e7b9cb4e"
+size = 24022080
+mtime_ms = 1789464055763
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/f0dd6426-5d7f-43e7-8ce8-f52bd45af2e8/ccc22e80-e47c-44e4-a5e8-3c6accd0eeb8"
+storage_version_token = "1789464063089528"
+content_type = "application/octet-stream"
