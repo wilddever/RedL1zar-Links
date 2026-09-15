@@ -126,3 +126,17 @@ mtime_ms = 1789467370074
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:5dc576e9-b888-4a98-99cf-1badbbeb304c/be9a76cd-d237-4c93-ad71-e7a737671494/d90586c8-b8be-4f9e-b3c0-ceff7317daa8"
 storage_version_token = "1789467381403170"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "5my8Lv-Qq6tt4QB7wcU1e"
+uri = "file://deliverables/redl1zar-vk-cloud-dist-current.zip"
+type = "unspecified"
+title = "Frontend без VPN-предупреждения"
+description = "Актуальная сборка для корня VK Cloud bucket: sign использует Replit API, VPN-предупреждение удалено, сохранено полное отображение сигны. ZIP проверен. SHA256: cc73c389c35fc024261c4e4a934a37bd6930475b138c58677d4004646c81b441"
+logical_id = "6be080c7-4381-4903-9c6c-8d65ec6fd31f"
+content_hash = "sha256:cc73c389c35fc024261c4e4a934a37bd6930475b138c58677d4004646c81b441"
+size = 577356
+mtime_ms = 1789471188300
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:accbc1a2-df19-45ed-84ed-05bd895a2d24/6be080c7-4381-4903-9c6c-8d65ec6fd31f/e397c95a-2514-48a6-a6ca-7f0769c6be48"
+storage_version_token = "1789471197740068"
+content_type = "application/octet-stream"

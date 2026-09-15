@@ -79,7 +79,8 @@ const playlists = [
 
 const YANDEX_404_URL = 'https://music.yandex.ru/404';
 const signApiBaseUrl = (
-  import.meta.env.VITE_SIGN_API_BASE_URL ?? 'https://api.xn--d1ax3b.fun'
+  import.meta.env.VITE_SIGN_API_BASE_URL ??
+  'https://red-l-1-zar-links-rusapi.replit.app'
 ).replace(/\/+$/, '');
 
 function signApiUrl(path: string) {
@@ -1005,9 +1006,6 @@ function SignView() {
         <p>
           leave a small mark in the signal. draw your signature, add a nickname,
           and send it into the guestbook.
-        </p>
-        <p className="sign-warning" role="alert">
-          Предупреждение: для успешной отправки сигны из России желательно использовать VPN.
         </p>
       </div>
 

@@ -1092,9 +1092,6 @@ function SignView() {
           leave a small mark in the signal. draw your signature, add a nickname,
           and send it into the guestbook.
         </p>
-        <p className="sign-warning" role="alert">
-          Предупреждение: для успешной отправки сигны из России желательно использовать VPN.
-        </p>
       </div>
 
       <form className="sign-form" onSubmit={submitSign}>
